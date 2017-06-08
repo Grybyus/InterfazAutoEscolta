@@ -15,6 +15,13 @@ except ImportError:
 import AutoSolar_support
 import random
 import time
+import matplotlib
+matplotlib.use('TkAgg')
+
+from numpy import arange, sin, pi
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 
 def vp_start_gui():
     '''Starting point when module is the main routine.'''
@@ -1626,6 +1633,29 @@ class Telemetria_Auto_Escolta:
         print(random.randint(0, 1))
         self.frames = [PhotoImage(file='PanelAlert.gif',format = 'gif -index %i' %(i)) for i in range(4)]
 
+
+        f = Figure(figsize=(5, 4), dpi=100)
+        a = f.add_subplot(111)
+        t = arange(0.0, 3.0, 0.01)
+        s = sin(2*pi*t)
+
+        circ = plt.Circle((2, 0), radius=0.1, color='g', fill =False)
+        a.add_patch(circ)
+
+        a.plot(t, s)
+        a.plot(2.0,sin(2*pi*2),linestyle='--', marker='o', color='b')
+        a.set_title('Longitud vs latitud')
+        a.set_xlabel('X Longitud')
+        a.set_ylabel('Y Latitud ')
+
+        # a tk.DrawingArea
+        canvas = FigureCanvasTkAgg(f, self.TabGPS)
+        canvas.show()
+        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+        canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
+
+
+        
         self.clock()
 
 
