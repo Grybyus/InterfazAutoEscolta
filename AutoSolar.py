@@ -19,9 +19,15 @@ import matplotlib
 from BateriasObserver import *
 from ControladorObserver import *
 from MotorObserver import *
+from mpptObservable import *
+from gpsObservable import *
+from botonesObservable import *
 
 matplotlib.use('TkAgg')
 
+from matplotlib import *
+import numpy as np
+from math import sqrt
 from numpy import arange, sin, pi, cos
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -49,6 +55,20 @@ def destroy_Telemetria_Auto_Escolta():
     global w
     w.destroy()
     w = None
+
+
+
+def open_file(name):
+        datos = open(name)
+        datos.readline()
+        dato = datos.readline().strip().split(",")
+        gps = np.array([[float(dato[2]), float(dato[3]), float(dato[4]), float(dato[5])]])
+
+        for linea in datos.readlines():
+            dato = linea.strip().split(",")
+            gps = np.append(gps, [[float(dato[2]), float(dato[3]), float(dato[4]), float(dato[5])]], axis=0) #LAT,LONG,ALT,DIST
+        datos.close()
+        return dato,gps
 
 
 def Tabla(Frame,rows,columns):
@@ -97,9 +117,26 @@ def setterControlador(this,valor):
         this.configure(foreground="#7c7c7c")
 
 
+def gpsVsPosiciones(gps, latitud, longitud):
+    posicion = 0
+    distancia = sqrt((gps[0][0] - latitud)**2 + (gps[0][1] - longitud)**2)
+    cont = 0
+    for p in gps:
+        distancia2 = sqrt(((p[0] - latitud)**2) + ((p[1] - longitud)**2))
+        if(distancia > distancia2):
+            posicion = cont
+            distancia = distancia2
+        cont+=1
+    return posicion
+
 class Telemetria_Auto_Escolta:
     #TODO DENTRO DE CLOCK SE REALIZA UNA Y OTRA VEZ
     def clock(self,ind =0):
+
+        ##########################################################
+        ##############Obteniendo Cambios Observados###############
+        ##########################################################
+
         #Obteniedo variables del observer del motor solo si hay algún cambio
         if self.motObserver.updated:
             motor = self.motObserver.getMotor()
@@ -165,6 +202,75 @@ class Telemetria_Auto_Escolta:
             self.cspVelocity = driver.spVelocity#0.0 
             self.drvObserver.updated=False
 
+        #Obteniedo variables del observer de los mppts solo si hay algún cambio
+        if self.mpptObserver.updated:
+            mpptss = self.mpptObserver.mppt()
+            self.mVin       = mpptss.Vin       # 0.0
+            self.mIin       = mpptss.Iin       # 0.0
+            self.mVout      = mpptss.Vout      # 0.0
+            self.mbulr      = mpptss.bulr      # 0.0
+            self.mout       = mpptss.out       # 0.0
+            self.mnoe       = mpptss.noe       # 0.0
+            self.mundv      = mpptss.undv      # 0.0
+            self.mt         = mpptss.t         # 0.0
+            #estructura extra
+            self.mt1        = mpptss.t1        # 0.0
+            self.mt2        = mpptss.t2        # 0.0
+            self.mcorriente = mpptss.corriente # 0.0
+            self.mpptObserver.updated=False
+
+        #Obteniedo variables del observer del GPS solo si hay algún cambio
+        if self.gpsObserver.updated:
+            gpss = self.gpsObserver.gps()
+            #estructura gps
+            self.glat        = gpss.lat        #0.0 #latitud:float
+            self.glon        = gpss.lon        #0.0 #longitud:float
+            self.galt        = gpss.alt        #0.0 #altitud:float
+            self.gerr        = gpss.err        #0 #error[metros]:int
+            self.glastUpdate = gpss.lastUpdate #datetime.fromtimestamp(0.0)#ultima vez actualizado:datetime
+            self.gheading    = gpss.heading    #0.0 #grados de inclinacion respecto de la direccion[grados]:float
+            self.gpsObserver.updated=False
+
+        #Obteniedo variables del observer de los Botones solo si hay algún cambio
+        if self.botObserver.updated:
+            botones = self.botObserver.botones()
+            #estructura principal
+            self.bmppt      = botones.mppt      # False#int 32 //flag
+            self.bpan1      = botones.pan1      # False
+            self.bpan2      = botones.pan2      # False
+            self.bpan3      = botones.pan3      # False
+            self.blucesAl   = botones.lucesAl   # False# int 32 //flag
+            self.blucesBa   = botones.lucesBa   # False
+            self.blucesEm   = botones.lucesEm   # False
+            self.bfan       = botones.fan       # 0#int 32 //[0-255]
+            self.bbateria   = botones.bateria   # False# int 32 //flag
+            self.botObserver.updated=False
+
+        ################################################
+        ##############Cambios en el GPS#################
+        ################################################
+
+        ##TODO: CAMBIAR POR LO QUE REALMENTE HACE EL GPS <--------------------------------------------------------------------------------------------------------
+        if(self.inicia == len(self.gps)-1):
+            self.inicia = -1
+
+        self.inicia = self.inicia+1
+        self.p = self.gps[self.inicia] #LAT,LONG,ALT,DIST
+        print(self.p)
+        po = gpsVsPosiciones(self.gps, self.p[0], self.p[1])
+        self.error[0].set_data(self.gps[po][3],self.gps[po][2]) #actualizar valores
+        self.posicion[0].set_data(self.gps[po][3], self.gps[po][2])
+
+        print("what?")
+        self.f.canvas.draw()
+
+        self.p1 = self.gps[self.inicia]
+        self.error2[0].set_data(self.p1[1],self.p1[0]) #actualizar valores
+        self.posicion2[0].set_data(self.p1[1], self.p1[0])
+        self.fun.canvas.draw()
+
+
+
         #RADOMIZADOR INICIAL
         that = random.randint(0, 100) 
         that0 =random.randint(0, 100) 
@@ -172,8 +278,6 @@ class Telemetria_Auto_Escolta:
         that2 =random.randint(0, 100) 
         that3 =random.randint(1, 8) 
         
-        binarizar = (random.randint(0, 1))
-        print(binarizar)
         
         ################################################
         ##############INFORMACION GENERAL###############
@@ -352,6 +456,20 @@ class Telemetria_Auto_Escolta:
         ####################PANELES#####################
         ################################################
         
+        #
+        #    self.mVin       = mpptss.Vin       # 0.0
+        #    self.mIin       = mpptss.Iin       # 0.0
+        #    self.mVout      = mpptss.Vout      # 0.0
+        #    self.mbulr      = mpptss.bulr      # 0.0
+        #    self.mout       = mpptss.out       # 0.0
+        #    self.mnoe       = mpptss.noe       # 0.0
+        #    self.mundv      = mpptss.undv      # 0.0
+        #    self.mt         = mpptss.t         # 0.0
+        #    #estructura extra
+        #    self.mt1        = mpptss.t1        # 0.0
+        #    self.mt2        = mpptss.t2        # 0.0
+        #    self.mcorriente = mpptss.corriente # 0.0
+
         self.background_label0.config(text=time.asctime())
         ind += 1
         if(ind ==4):
@@ -388,11 +506,11 @@ class Telemetria_Auto_Escolta:
         ################################################
         ####################EXTRAAS#####################
         ################################################
-        
+
         #Sensores
-        setter(self.SensorCorriente,'%.2f'%(that0))
-        setter(self.SensorTemperatura1,'%.2f'%(that1))
-        setter(self.SensorTemperatura2,'%.2f'%(that))
+        setter(self.SensorCorriente,'%.2f'%(self.mcorriente))
+        setter(self.SensorTemperatura1,'%.2f'%(self.mt1))
+        setter(self.SensorTemperatura2,'%.2f'%(self.mt2))
 
         # RMS C y B
         setter(self.C0,'%.2f'%(self.mphaseC))
@@ -408,16 +526,20 @@ class Telemetria_Auto_Escolta:
         setter(self.OdometroAh0,'%.2f'%(self.mAH))
 
         # Estado Botons Pantalas
-        setterControlador(self.BateriaLabel,random.randint(0, 1))
-        setterControlador(self.mpptLabel,random.randint(0, 1))
-        setterControlador(self.mppt1Label,random.randint(0, 1))
-        setterControlador(self.mppt2Label,random.randint(0, 1))
-        setterControlador(self.mppt3Label,random.randint(0, 1))
-        setterControlador(self.LucesAltasLabel,random.randint(0, 1))
-        setterControlador(self.LucesBajasLabel,random.randint(0, 1))
-        setterControlador(self.LucesEmergenciaLabel,random.randint(0, 1))
-        setterControlador(self.VentiladorLabel,random.randint(0, 1))
-        setterControlador(self.VentiladorPorcent,random.randint(0, 1))
+        setterControlador(self.BateriaLabel,not self.bbateria)
+        setterControlador(self.mpptLabel,not  self.bmppt)
+        setterControlador(self.mppt1Label,not self.bpan1)
+        setterControlador(self.mppt2Label,not self.bpan2)
+        setterControlador(self.mppt3Label,not self.bpan3)
+        setterControlador(self.LucesAltasLabel,not self.blucesAl)
+        setterControlador(self.LucesBajasLabel,not self.blucesBa)
+        setterControlador(self.LucesEmergenciaLabel,not self.blucesEm)
+        if (self.bfan >= 0):
+            fan = True
+        else:
+            fan = False
+        setterControlador(self.VentiladorLabel, fan)
+        setterControlador(self.VentiladorPorcent,self.bfan)
 
         self.top.after(70, self.clock,ind)
 
@@ -1688,6 +1810,10 @@ class Telemetria_Auto_Escolta:
         self.menubar = Menu(self.top,font=font9,bg=_bgcolor,fg=_fgcolor)
         self.top.configure(menu = self.menubar)
 
+        ##########################################################################
+
+        ##########################################################################
+
         #Asignación inicial del tamaño de la tabla de la Batería
         Tabla(self.LabelframeBateria, 9,12)
 
@@ -1710,7 +1836,7 @@ class Telemetria_Auto_Escolta:
         self.background_label.image = filename
         self.background_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        #Aletra de Paneles
+        #Alerta de Paneles
         path0 = "PanelAlert.gif"
         filename0 = PhotoImage(file= path0, format="gif")
         self.background_label0 = Label(self.Frame2, image=filename0)
@@ -1727,20 +1853,33 @@ class Telemetria_Auto_Escolta:
         print(random.randint(0, 1))
         self.frames = [PhotoImage(file='PanelAlert.gif',format = 'gif -index %i' %(i)) for i in range(4)]
 
-        #Gráfico de GPS
-        self.f = Figure(figsize=(5, 4), dpi=100)
+        ########################
+        ####Gráfico de GPS######
+        ########################
+
+        self.dato, self.gps=open_file("LasVizcachas_2.csv")
+        self.dato2 = self.dato
+        self.gps2 = self.gps
+
+        #se crea la figura con un color de fondo
+        self.f = plt.figure(figsize=(5, 4), dpi=100, facecolor = (0.9294,0.9137,0.8667))
         self.a = self.f.add_subplot(111)
-        self.t = arange(0.0, 3.0, 0.01)
-        self.s = sin(2*pi*self.t)
 
-        self.circ = plt.Circle((2, 0), radius=0.1, color='g', fill =False)
-        self.a.add_patch(self.circ)
+        
 
-        self.a.plot(self.t, self.s)
-        self.a.plot(2.0,sin(2*pi*2),linestyle='--', marker='o', color='b')
-        self.a.set_title('Longitud vs latitud')
-        self.a.set_xlabel('X Longitud')
-        self.a.set_ylabel('Y Latitud ')
+        #se grafica la ruta y los marker del gps
+        self.x = np.arange(len(self.gps[:,2]))
+        plt.plot(self.gps[:,3], self.gps[:,2], color=(0, 0.7, 0.2))
+        plt.fill_between(self.gps[:,3], self.gps[:,2], np.min(self.gps[:,2]),color=(0.5,0,0,0.5))
+        #marcar gps
+        self.p = gpsVsPosiciones(self.gps, self.gps[0][0], self.gps[0][1])
+
+        self.error = plt.plot(self.gps[self.p][3], self.gps[self.p][2], marker='o', color=(0.1647,0.4157,1, 0.5), markersize=20)
+        self.posicion = plt.plot(self.gps[self.p][3], self.gps[self.p][2], marker='o', color=(0.1647,0.4157,1), markersize=6)
+
+        self.a.grid(True) #crear grid
+        self.a.set_title('Grafico de Perfil')
+
 
         # a tk.DrawingArea
         self.canvas = FigureCanvasTkAgg(self.f, self.LabelLatitudLongitud)
@@ -1750,26 +1889,27 @@ class Telemetria_Auto_Escolta:
         #self.canvas.configure(width=760)
 
 
-        self.fun = Figure(figsize=(5, 4), dpi=100)
+        #se crea la figura con un color de fondo
+        self.fun = plt.figure(figsize=(5, 4), dpi=100,facecolor = (0.9294,0.9137,0.8667))
         self.range = self.fun.add_subplot(111)
-        self.trange = arange(0.0, 3.0, 0.01)
-        self.set = cos(2*pi*self.t)
 
-        self.circ = plt.Circle((2, cos(2*pi*0)), radius=0.1, color='g', fill =False)
-        self.range.add_patch(self.circ)
+        #se grafica la ruta y los marker del gps2
+        plt.plot(self.gps2[:,1], self.gps2[:,0], color=(0, 0.7, 0.2))
 
-        self.range.plot(self.trange, self.set)
-        self.range.plot(2.0,cos(2*pi*2),linestyle='--', marker='o', color='b')
-        self.range.set_title('Longitud vs latitud')
-        self.range.set_xlabel('X Longitud')
-        self.range.set_ylabel('Y Latitud ')
+        #marcar gps2
+        self.error2 = plt.plot(self.gps2[0][1], self.gps2[0][0], marker='o', color=(0.1647,0.4157,1, 0.5), markersize=20)
+        self.posicion2 = plt.plot(self.gps2[0][1], self.gps2[0][0], marker='o', color=(0.1647,0.4157,1), markersize=6)
 
-        # a tk.DrawingArea
+        self.range.grid(True) #crear grid
+        plt.title('Ruta de carrera')
+
         self.canvasGPS = FigureCanvasTkAgg(self.fun, self.LabelGPS)
         self.canvasGPS.show()
         self.canvasGPS.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
         self.canvasGPS._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
         
+        self.inicia = -1
+
 
         #######################################
         #########Iniciando Oberserver##########
@@ -1777,6 +1917,10 @@ class Telemetria_Auto_Escolta:
         self.batObserver = BateriasObserver()
         self.drvObserver = ControladorObserver()
         self.motObserver = MotorObserver()
+
+        self.mpptObserver = mpptObservable()
+        self.gpsObserver = gpsObservable()
+        self.botObserver = botonesObservable()
 
         self.drvObserver.connect()#inicia la comunicación con el cambus
 
@@ -1828,8 +1972,43 @@ class Telemetria_Auto_Escolta:
         self.cspBusCurrent = 0.0
         self.cspVelocity = 0.0 
 
-        self.clock()
 
+        ##Inicializando variables del Mppt observadas
+        self.mVin       = 0.0
+        self.mIin       = 0.0
+        self.mVout      = 0.0
+        self.mbulr      = 0.0
+        self.mout       = 0.0
+        self.mnoe       = 0.0
+        self.mundv      = 0.0
+        self.mt         = 0.0
+        #estructura extra
+        self.mt1        = 0.0
+        self.mt2        = 0.0
+        self.mcorriente = 0.0
+
+        ##Inicializando variables del GPS observadas
+        self.glat        = 0.0 #latitud:float
+        self.glon        = 0.0 #longitud:float
+        self.galt        = 0.0 #altitud:float
+        self.gerr        = 0 #error[metros]:int
+        self.glastUpdate = datetime.fromtimestamp(0.0)#ultima vez actualizado:datetime
+        self.gheading    = 0.0 #grados de inclinacion respecto de la direccion[grados]:float
+
+        ##Inicializando variables de botones observados
+        self.bmppt      = False#int 32 //flag
+        self.bpan1      = False
+        self.bpan2      = False
+        self.bpan3      = False
+        self.blucesAl   = False# int 32 //flag
+        self.blucesBa   = False
+        self.blucesEm   = False
+        self.bfan       = 0#int 32 //[0-255]
+        self.bbateria   = False# int 32 //flag
+
+
+
+        self.clock()
 
 if __name__ == '__main__':
     vp_start_gui()
