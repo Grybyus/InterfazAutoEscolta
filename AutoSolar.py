@@ -16,9 +16,13 @@ import AutoSolar_support
 import random
 import time
 import matplotlib
+from BateriasObserver import *
+from ControladorObserver import *
+from MotorObserver import *
+
 matplotlib.use('TkAgg')
 
-from numpy import arange, sin, pi
+from numpy import arange, sin, pi, cos
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
@@ -70,13 +74,13 @@ def set(self, row, column, value):
         widget = self._widgets[row][column]
         widget.configure(text=value)
         if (type(value) == int):
-            if(float(value) < 2.5):
+            if((float(value)/1000.0) < 2.5):
                 widget.configure(background="red")
-            if(float(value) > 4.0):
+            if((float(value)/1000.0) > 4.0):
                 widget.configure(background="#0998ee")
-            if(float(value) < 0):
+            if((float(value)/1000.0) < 0.0):
                 widget.configure(background="yellow")
-            if(float(value) <= 4 and float(value)>= 2.5):
+            if((float(value)/1000.0) <= 4.0 and float(value)>= 2.5):
                 widget.configure(background="white")
 
 
@@ -96,9 +100,73 @@ def setterControlador(this,valor):
 class Telemetria_Auto_Escolta:
     #TODO DENTRO DE CLOCK SE REALIZA UNA Y OTRA VEZ
     def clock(self,ind =0):
+        #Obteniedo variables del observer del motor solo si hay algún cambio
+        if self.motObserver.updated:
+            motor = self.motObserver.getMotor()
+            #errores = int(motor.errores)
+            setter(self.Errores,repr(motor.getErrorMSG()))
+            setter(self.Flags,repr(motor.getFlagsMSG()))
+            #flag = int(motor.flags)
+            self.motorActivo= motor.motorActivo
+            self.mcurrent = motor.current
+            self.mvoltage = motor.voltage
+            self.mvelocidad = motor.velocidad
+            self.mRPM = motor.RPM
+            self.mphaseC = motor.phaseC
+            self.mphaseB = motor.phaseB
+            self.mvoltage_1= motor.voltage_1
+            self.mvoltage_2= motor.voltage_2
+            self.mvoltage_3= motor.voltage_3
+            self.mvoltage_4= motor.voltage_4
+            self.mTmotor= motor.t_motor
+            self.mTDSP= motor.t_DSP
+            self.mOdo= motor.odometro
+            self.mAH= motor.ah
+
+            self.motObserver.updated=False
+        else:
+            setter(self.Errores,'No hay errores')
+            setter(self.Flags,'No hay errores')
+
+
+        #Obteniedo variables del observer de las baterias solo si hay algún cambio
+        if self.batObserver.updated:
+            bateria = self.batObserver.getBattery()
+            self.bCB1 = bateria.CB1 #{'SN':'','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
+            self.bCB2 = bateria.CB2 #{'SN':'','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
+            self.bCB3 = bateria.CB3 #{'SN':'','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
+            self.bCB4 = bateria.CB4 #{'SN':'','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
+            self.bCB5 = bateria.CB5 #{'SN':'','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
+            self.bCB6 = bateria.CB6 #{'SN':'','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
+            self.bSOCah = bateria._SOC_ah #0.0
+            self.bSOCp = bateria._SOC_p #0.0
+
+            self.bminVolt = bateria.minVolt #{ 'mV': 0.0, 'CMUNumber':0,'CellNumber':0}
+            self.bmaxVolt = bateria.maxVolt #{ 'mV': 0.0, 'CMUNumber':0,'CellNumber':0}
+            self.bminTemp = bateria.minTemp #{ 'mT': 0.0, 'CMUNumber':0}
+            self.bmaxTemp = bateria.maxTemp #{ 'mT': 0.0, 'CMUNumber':0}
+            self.batObserver.updated=False
+
+
+        #Obteniedo variables del observer de los controladores solo si hay algún cambio
+        if self.drvObserver.updated:
+            driver = self.drvObserver.getDriver()
+            self.creverse = driver.reverse # False
+            self.cneutral = driver.neutral # False
+            self.cregen = driver.regen #False
+            self.cdrive = driver.drive #False
+            self.caccesories = driver.accesories#False
+            self.crun = driver.run #False
+            self.cstart = driver.start #False
+            self.cbrakes = driver.brakes #False
+            self.cfueldoor = driver.fueldoor#False
+            self.cspCurrent = driver.spCurrent#0.0
+            self.cspBusCurrent = driver.spBusCurrent# 0.0
+            self.cspVelocity = driver.spVelocity#0.0 
+            self.drvObserver.updated=False
 
         #RADOMIZADOR INICIAL
-        that =random.randint(0, 100) 
+        that = random.randint(0, 100) 
         that0 =random.randint(0, 100) 
         that1 =random.randint(0, 100) 
         that2 =random.randint(0, 100) 
@@ -110,71 +178,72 @@ class Telemetria_Auto_Escolta:
         ################################################
         ##############INFORMACION GENERAL###############
         ################################################
-        
+                
         # VELOCIDAD (Km/hr)
-        setter(self.velocidad,str(that*that2/10)+' Km/hr')
+        setter(self.velocidad,'%.f'%(self.mvelocidad*3.6)+' Km/hr')
         
         # REVOLUCIONES POR MINUTO
-        setter(self.RPM,str(that*that2)+' RPM')
+        setter(self.RPM,'%.f'%(self.mRPM)+' RPM')
 
         # POTENCIA
-        setter(self.POTENCIA,str(that*that2)+' W')
+        setter(self.POTENCIA,str(self.mvoltage*self.mcurrent)+' W')
 
         # Barra y Porcentaje de Velocidad
-        setter(self.SetVelocityPorcentaje,str(that)+'%')
-        setterBar(self.BarraProgresoSetVelocity,that)
-        
+        setter(self.SetVelocityPorcentaje,str(round(int(self.cspVelocity))))
+        setterBar(self.BarraProgresoSetVelocity,abs(self.cspVelocity/60))
+
         # Barra y Porcentaje Current
-        setter(self.SetCurrentPorcentaje,str(that0)+'%')
-        setterBar(self.BarraProgresoSetCurrent,that0)
-        
+        setter(self.SetCurrentPorcentaje,'%.f'%(self.cspCurrent*100)+'%')
+        setterBar(self.BarraProgresoSetCurrent,self.cspCurrent*100)
+                
         # Barra y Porcentaje Bus
-        setter(self.SetBusPorcentaje,str(that1)+'%')
-        setterBar(self.BarraProgresoSetBus,that1)
+        setter(self.SetBusPorcentaje,'%.f'%(self.cspBusCurrent*100)+'%')
+        setterBar(self.BarraProgresoSetBus,self.cspBusCurrent*100)
 
         # Ah, Barra y Porcentaje SOC ah / %
-        setter(self.SocAh,str(that1*10+that2))
-        setter(self.SocPorcentaje,str(that2)+'%')
-        setterBar(self.BarraProgresoSoc,that2)
-
+        setter(self.SocAh,'%.2f'%(self.bSOCah))
+        setter(self.SocPorcentaje,str(self.bSOCp*100)+'%')
+        setterBar(self.BarraProgresoSoc,self.bSOCp*100)
+            
         #Errores y Flags
-        setter(self.Errores,'DC Bus over voltage')
-        setter(self.Flags,'Motor Current')
+        #setter(self.Errores,'DC Bus over voltage ')
+        #setter(self.Flags,'Motor Current')
 
         # Bus current (A)
-        setter(self.BusCurrent,str(that))
+        setter(self.BusCurrent,'%.2f'%(self.mcurrent))
 
         # Bus voltaje (V)
-        setter(self.BusVoltaje,str(that0))
+        setter(self.BusVoltaje,'%.2f'%(self.mvoltage))
 
         # Temperatura Motor (C)
-        setter(self.TemperaturaMotor,str(that2))
+        setter(self.TemperaturaMotor,'%.2f'%(self.mTmotor))
 
         # Temperatura DSP (C)
-        setter(self.TemperaturaDSP,str(that1))
+        setter(self.TemperaturaDSP,'%.2f'%(self.mTDSP))
 
         # Temperatura MIN y MAX de CMU
-        setter(self.TemperaturaMIN,str(that2))
-        setter(self.TemperaturaMAX,str(that1))
-        setter(self.CMUtempMIN,str(that3))
-        setter(self.CMUtempMAX,str(that3))
+        setter(self.TemperaturaMIN,'%.2f'%(self.bminTemp['mT']))
+        setter(self.TemperaturaMAX,'%.2f'%(self.bmaxTemp['mT']))
+        setter(self.CMUtempMIN,str(self.bminTemp['CMUNumber']))
+        setter(self.CMUtempMAX,str(self.bmaxTemp['CMUNumber']))
 
         # Voltaje MIN y MAX de CMU
-        setter(self.VoltajeMIN,str(that2))
-        setter(self.VoltajeMAX,str(that1))
-        setter(self.CMUvoltMIN,str(that3))
-        setter(self.CMUvoltMAX,str(that3))
+        setter(self.VoltajeMIN,'%.2f'%(self.bminVolt['mV']/1000.0))
+        setter(self.VoltajeMAX,'%.2f'%(self.bmaxVolt['mV']/1000.0))
+        setter(self.CMUvoltMIN,str(self.bminVolt['CMUNumber']))
+        setter(self.CMUvoltMAX,str(self.bmaxVolt['CMUNumber']))
+ 
 
         ## Estado Controlador
-        setterControlador(self.ReverseLabel,binarizar)
-        setterControlador(self.NeutralLabel,random.randint(0, 1))
-        setterControlador(self.RegenLabel,random.randint(0, 1))
-        setterControlador(self.DriveLabel,random.randint(0, 1))
-        setterControlador(self.AccesoriesLabel,random.randint(0, 1))
-        setterControlador(self.RunLabel,random.randint(0, 1))
-        setterControlador(self.StartLabel,random.randint(0, 1))
-        setterControlador(self.BrakesLabel,random.randint(0, 1))
-        setterControlador(self.FuelDoorLabel,random.randint(0, 1))
+        setterControlador(self.ReverseLabel,not self.creverse)
+        setterControlador(self.NeutralLabel,not self.cneutral)
+        setterControlador(self.RegenLabel,not self.cregen)
+        setterControlador(self.DriveLabel,not self.cdrive)
+        setterControlador(self.AccesoriesLabel,not self.caccesories)
+        setterControlador(self.RunLabel,not self.crun)
+        setterControlador(self.StartLabel,not self.cstart)
+        setterControlador(self.BrakesLabel,not self.cbrakes)
+        setterControlador(self.FuelDoorLabel,not self.cfueldoor)
 
 
         ################################################
@@ -182,101 +251,101 @@ class Telemetria_Auto_Escolta:
         ################################################
 
         ##TABLA BATERÍA
-        set(self.LabelframeBateria,1,1, random.randint(0, 10))
-        set(self.LabelframeBateria,1,2, random.randint(0, 10))
-        set(self.LabelframeBateria,1,3, random.randint(0, 10))
-        set(self.LabelframeBateria,1,4, random.randint(0, 10))
-        set(self.LabelframeBateria,1,5, random.randint(0, 10))
-        set(self.LabelframeBateria,1,6, random.randint(0, 10))
-        set(self.LabelframeBateria,1,7, random.randint(0, 10))
-        set(self.LabelframeBateria,1,8, random.randint(0, 10))
-        set(self.LabelframeBateria,1,9, random.randint(0, 10))
-        set(self.LabelframeBateria,1,10, random.randint(0, 10))
-        set(self.LabelframeBateria,1,11, random.randint(0, 10))
+        set(self.LabelframeBateria,1,1, self.bCB1['SN'])
+        set(self.LabelframeBateria,1,2, self.bCB1['t_PCB'])
+        set(self.LabelframeBateria,1,3, self.bCB1['t_Cell'])
+        set(self.LabelframeBateria,1,4, self.bCB1['v_Cells'][0])
+        set(self.LabelframeBateria,1,5, self.bCB1['v_Cells'][1])
+        set(self.LabelframeBateria,1,6, self.bCB1['v_Cells'][2])
+        set(self.LabelframeBateria,1,7, self.bCB1['v_Cells'][3])
+        set(self.LabelframeBateria,1,8, self.bCB1['v_Cells'][4])
+        set(self.LabelframeBateria,1,9, self.bCB1['v_Cells'][5])
+        set(self.LabelframeBateria,1,10, self.bCB1['v_Cells'][6])
+        set(self.LabelframeBateria,1,11, self.bCB1['v_Cells'][7])
 
-        set(self.LabelframeBateria,2,1, random.randint(0, 10))
-        set(self.LabelframeBateria,2,2, random.randint(0, 10))
-        set(self.LabelframeBateria,2,3, random.randint(0, 10))
-        set(self.LabelframeBateria,2,4, random.randint(0, 10))
-        set(self.LabelframeBateria,2,5, random.randint(0, 10))
-        set(self.LabelframeBateria,2,6, random.randint(0, 10))
-        set(self.LabelframeBateria,2,7, random.randint(0, 10))
-        set(self.LabelframeBateria,2,8, random.randint(0, 10))
-        set(self.LabelframeBateria,2,9, random.randint(0, 10))
-        set(self.LabelframeBateria,2,10, random.randint(0, 10))
-        set(self.LabelframeBateria,2,11, random.randint(0, 10))
+        set(self.LabelframeBateria,2,1, self.bCB2['SN'])
+        set(self.LabelframeBateria,2,2, self.bCB2['t_PCB'])
+        set(self.LabelframeBateria,2,3, self.bCB2['t_Cell'])
+        set(self.LabelframeBateria,2,4, self.bCB2['v_Cells'][0])
+        set(self.LabelframeBateria,2,5, self.bCB2['v_Cells'][1])
+        set(self.LabelframeBateria,2,6, self.bCB2['v_Cells'][2])
+        set(self.LabelframeBateria,2,7, self.bCB2['v_Cells'][3])
+        set(self.LabelframeBateria,2,8, self.bCB2['v_Cells'][4])
+        set(self.LabelframeBateria,2,9, self.bCB2['v_Cells'][5])
+        set(self.LabelframeBateria,2,10, self.bCB2['v_Cells'][6])
+        set(self.LabelframeBateria,2,11, self.bCB2['v_Cells'][7])
 
-        set(self.LabelframeBateria,3,1, random.randint(0, 10))
-        set(self.LabelframeBateria,3,2, random.randint(0, 10))
-        set(self.LabelframeBateria,3,3, random.randint(0, 10))
-        set(self.LabelframeBateria,3,4, random.randint(0, 10))
-        set(self.LabelframeBateria,3,5, random.randint(0, 10))
-        set(self.LabelframeBateria,3,6, random.randint(0, 10))
-        set(self.LabelframeBateria,3,7, random.randint(0, 10))
-        set(self.LabelframeBateria,3,8, random.randint(0, 10))
-        set(self.LabelframeBateria,3,9, random.randint(0, 10))
-        set(self.LabelframeBateria,3,10, random.randint(0, 10))
-        set(self.LabelframeBateria,3,11, random.randint(0, 10))
+        set(self.LabelframeBateria,3,1, self.bCB3['SN'])
+        set(self.LabelframeBateria,3,2, self.bCB3['t_PCB'])
+        set(self.LabelframeBateria,3,3, self.bCB3['t_Cell'])
+        set(self.LabelframeBateria,3,4, self.bCB3['v_Cells'][0])
+        set(self.LabelframeBateria,3,5, self.bCB3['v_Cells'][1])
+        set(self.LabelframeBateria,3,6, self.bCB3['v_Cells'][2])
+        set(self.LabelframeBateria,3,7, self.bCB3['v_Cells'][3])
+        set(self.LabelframeBateria,3,8, self.bCB3['v_Cells'][4])
+        set(self.LabelframeBateria,3,9, self.bCB3['v_Cells'][5])
+        set(self.LabelframeBateria,3,10, self.bCB3['v_Cells'][6])
+        set(self.LabelframeBateria,3,11, self.bCB3['v_Cells'][7])
 
-        set(self.LabelframeBateria,4,1, random.randint(0, 10))
-        set(self.LabelframeBateria,4,2, random.randint(0, 10))
-        set(self.LabelframeBateria,4,3, random.randint(0, 10))
-        set(self.LabelframeBateria,4,4, random.randint(0, 10))
-        set(self.LabelframeBateria,4,5, random.randint(0, 10))
-        set(self.LabelframeBateria,4,6, random.randint(0, 10))
-        set(self.LabelframeBateria,4,7, random.randint(0, 10))
-        set(self.LabelframeBateria,4,8, random.randint(0, 10))
-        set(self.LabelframeBateria,4,9, random.randint(0, 10))
-        set(self.LabelframeBateria,4,10, random.randint(0, 10))
-        set(self.LabelframeBateria,4,11, random.randint(0, 10))
+        set(self.LabelframeBateria,4,1, self.bCB4['SN'])
+        set(self.LabelframeBateria,4,2, self.bCB4['t_PCB'])
+        set(self.LabelframeBateria,4,3, self.bCB4['t_Cell'])
+        set(self.LabelframeBateria,4,4, self.bCB4['v_Cells'][0])
+        set(self.LabelframeBateria,4,5, self.bCB4['v_Cells'][1])
+        set(self.LabelframeBateria,4,6, self.bCB4['v_Cells'][2])
+        set(self.LabelframeBateria,4,7, self.bCB4['v_Cells'][3])
+        set(self.LabelframeBateria,4,8, self.bCB4['v_Cells'][4])
+        set(self.LabelframeBateria,4,9, self.bCB4['v_Cells'][5])
+        set(self.LabelframeBateria,4,10, self.bCB4['v_Cells'][6])
+        set(self.LabelframeBateria,4,11, self.bCB4['v_Cells'][7])
 
-        set(self.LabelframeBateria,5,1, random.randint(0, 10))
-        set(self.LabelframeBateria,5,2, random.randint(0, 10))
-        set(self.LabelframeBateria,5,3, random.randint(0, 10))
-        set(self.LabelframeBateria,5,4, random.randint(0, 10))
-        set(self.LabelframeBateria,5,5, random.randint(0, 10))
-        set(self.LabelframeBateria,5,6, random.randint(0, 10))
-        set(self.LabelframeBateria,5,7, random.randint(0, 10))
-        set(self.LabelframeBateria,5,8, random.randint(0, 10))
-        set(self.LabelframeBateria,5,9, random.randint(0, 10))
-        set(self.LabelframeBateria,5,10, random.randint(0, 10))
-        set(self.LabelframeBateria,5,11, random.randint(0, 10))
+        set(self.LabelframeBateria,5,1, self.bCB5['SN'])
+        set(self.LabelframeBateria,5,2, self.bCB5['t_PCB'])
+        set(self.LabelframeBateria,5,3, self.bCB5['t_Cell'])
+        set(self.LabelframeBateria,5,4, self.bCB5['v_Cells'][0])
+        set(self.LabelframeBateria,5,5, self.bCB5['v_Cells'][1])
+        set(self.LabelframeBateria,5,6, self.bCB5['v_Cells'][2])
+        set(self.LabelframeBateria,5,7, self.bCB5['v_Cells'][3])
+        set(self.LabelframeBateria,5,8, self.bCB5['v_Cells'][4])
+        set(self.LabelframeBateria,5,9, self.bCB5['v_Cells'][5])
+        set(self.LabelframeBateria,5,10, self.bCB5['v_Cells'][6])
+        set(self.LabelframeBateria,5,11, self.bCB5['v_Cells'][7])
 
-        set(self.LabelframeBateria,6,1, random.randint(0, 10))
-        set(self.LabelframeBateria,6,2, random.randint(0, 10))
-        set(self.LabelframeBateria,6,3, random.randint(0, 10))
-        set(self.LabelframeBateria,6,4, random.randint(0, 10))
-        set(self.LabelframeBateria,6,5, random.randint(0, 10))
-        set(self.LabelframeBateria,6,6, random.randint(0, 10))
-        set(self.LabelframeBateria,6,7, random.randint(0, 10))
-        set(self.LabelframeBateria,6,8, random.randint(0, 10))
-        set(self.LabelframeBateria,6,9, random.randint(0, 10))
-        set(self.LabelframeBateria,6,10, random.randint(0, 10))
-        set(self.LabelframeBateria,6,11, random.randint(0, 10))
+        set(self.LabelframeBateria,6,1, self.bCB6['SN'])
+        set(self.LabelframeBateria,6,2, self.bCB6['t_PCB'])
+        set(self.LabelframeBateria,6,3, self.bCB6['t_Cell'])
+        set(self.LabelframeBateria,6,4, self.bCB6['v_Cells'][0])
+        set(self.LabelframeBateria,6,5, self.bCB6['v_Cells'][1])
+        set(self.LabelframeBateria,6,6, self.bCB6['v_Cells'][2])
+        set(self.LabelframeBateria,6,7, self.bCB6['v_Cells'][3])
+        set(self.LabelframeBateria,6,8, self.bCB6['v_Cells'][4])
+        set(self.LabelframeBateria,6,9, self.bCB6['v_Cells'][5])
+        set(self.LabelframeBateria,6,10, self.bCB6['v_Cells'][6])
+        set(self.LabelframeBateria,6,11, self.bCB6['v_Cells'][7])
 
-        set(self.LabelframeBateria,7,1, random.randint(0, 10))
-        set(self.LabelframeBateria,7,2, random.randint(0, 10))
-        set(self.LabelframeBateria,7,3, random.randint(0, 10))
-        set(self.LabelframeBateria,7,4, random.randint(0, 10))
-        set(self.LabelframeBateria,7,5, random.randint(0, 10))
-        set(self.LabelframeBateria,7,6, random.randint(0, 10))
-        set(self.LabelframeBateria,7,7, random.randint(0, 10))
-        set(self.LabelframeBateria,7,8, random.randint(0, 10))
-        set(self.LabelframeBateria,7,9, random.randint(0, 10))
-        set(self.LabelframeBateria,7,10, random.randint(0, 10))
-        set(self.LabelframeBateria,7,11, random.randint(0, 10))
+        set(self.LabelframeBateria,7,1, 0)
+        set(self.LabelframeBateria,7,2, 0)
+        set(self.LabelframeBateria,7,3, 0)
+        set(self.LabelframeBateria,7,4, 0)
+        set(self.LabelframeBateria,7,5, 0)
+        set(self.LabelframeBateria,7,6, 0)
+        set(self.LabelframeBateria,7,7, 0)
+        set(self.LabelframeBateria,7,8, 0)
+        set(self.LabelframeBateria,7,9, 0)
+        set(self.LabelframeBateria,7,10, 0)
+        set(self.LabelframeBateria,7,11, 0)
 
-        set(self.LabelframeBateria,8,1, random.randint(0, 10))
-        set(self.LabelframeBateria,8,2, random.randint(0, 10))
-        set(self.LabelframeBateria,8,3, random.randint(0, 10))
-        set(self.LabelframeBateria,8,4, random.randint(0, 10))
-        set(self.LabelframeBateria,8,5, random.randint(0, 10))
-        set(self.LabelframeBateria,8,6, random.randint(0, 10))
-        set(self.LabelframeBateria,8,7, random.randint(0, 10))
-        set(self.LabelframeBateria,8,8, random.randint(0, 10))
-        set(self.LabelframeBateria,8,9, random.randint(0, 10))
-        set(self.LabelframeBateria,8,10, random.randint(0, 10))
-        set(self.LabelframeBateria,8,11, random.randint(0, 10))
+        set(self.LabelframeBateria,8,1, 0)
+        set(self.LabelframeBateria,8,2, 0)
+        set(self.LabelframeBateria,8,3, 0)
+        set(self.LabelframeBateria,8,4, 0)
+        set(self.LabelframeBateria,8,5, 0)
+        set(self.LabelframeBateria,8,6, 0)
+        set(self.LabelframeBateria,8,7, 0)
+        set(self.LabelframeBateria,8,8, 0)
+        set(self.LabelframeBateria,8,9, 0)
+        set(self.LabelframeBateria,8,10, 0)
+        set(self.LabelframeBateria,8,11, 0)
 
 
         ################################################
@@ -321,22 +390,22 @@ class Telemetria_Auto_Escolta:
         ################################################
         
         #Sensores
-        setter(self.SensorCorriente,str(that0))
-        setter(self.SensorTemperatura1,str(that1))
-        setter(self.SensorTemperatura2,str(that))
+        setter(self.SensorCorriente,'%.2f'%(that0))
+        setter(self.SensorTemperatura1,'%.2f'%(that1))
+        setter(self.SensorTemperatura2,'%.2f'%(that))
 
         # RMS C y B
-        setter(self.C0,str(that*10))
-        setter(self.B0,str(that1*10))
+        setter(self.C0,'%.2f'%(self.mphaseC))
+        setter(self.B0,'%.2f'%(self.mphaseB))
 
         # Voltajes 1.5 / 3.3 / 1.9
-        setter(self.V150,str(that))
-        setter(self.V330,str(that3))
-        setter(self.V190,str(that1))
+        setter(self.V150,'%.2f'%(self.mvoltage_1))#TODO Revisar voltaje real.
+        setter(self.V330,'%.2f'%(self.mvoltage_3))
+        setter(self.V190,'%.2f'%(self.mvoltage_4))
 
         # ODOMETRO Km y Bus Ah
-        setter(self.OdometroKM0,str(that2))
-        setter(self.OdometroAh0,str(that1))
+        setter(self.OdometroKM0,'%.2f'%(self.mOdo))
+        setter(self.OdometroAh0,'%.2f'%(self.mAH))
 
         # Estado Botons Pantalas
         setterControlador(self.BateriaLabel,random.randint(0, 1))
@@ -398,6 +467,31 @@ class Telemetria_Auto_Escolta:
         self.TabGPS = ttk.Frame(self.Tabulador)
         self.Tabulador.add(self.TabGPS, padding=3)
         self.Tabulador.tab(1, text="GPS",underline="-1",)
+
+
+        self.LabelLatitudLongitud = LabelFrame(self.TabGPS)
+        self.LabelLatitudLongitud.place(relx=0.0, rely=0.0, relheight=0.35
+                , relwidth=1.0)
+        self.LabelLatitudLongitud.configure(relief=GROOVE)
+        self.LabelLatitudLongitud.configure(foreground="black")
+        self.LabelLatitudLongitud.configure(text='''Longitud vs Latitud''')
+        self.LabelLatitudLongitud.configure(background="#eaeaea")
+        self.LabelLatitudLongitud.configure(highlightbackground="#d9d9d9")
+        self.LabelLatitudLongitud.configure(highlightcolor="black")
+        self.LabelLatitudLongitud.configure(width=760)
+
+        self.LabelGPS = LabelFrame(self.TabGPS)
+        self.LabelGPS.place(relx=0.0, rely=0.36, relheight=0.64
+                , relwidth=1.0)
+        self.LabelGPS.configure(relief=GROOVE)
+        self.LabelGPS.configure(foreground="black")
+        self.LabelGPS.configure(text='''GPS''')
+        self.LabelGPS.configure(background="#eaeaea")
+        self.LabelGPS.configure(highlightbackground="#d9d9d9")
+        self.LabelGPS.configure(highlightcolor="black")
+        self.LabelGPS.configure(width=760)
+
+
 
         self.LabelframeBateria = LabelFrame(self.TabBateriaPaneles)
         self.LabelframeBateria.place(relx=0.0, rely=0.0, relheight=0.35
@@ -1350,7 +1444,7 @@ class Telemetria_Auto_Escolta:
         self.Errores.configure(text='''DC Bus over voltage''')
 
         self.Flags = Label(self.LabelframeGeneral)
-        self.Flags.place(relx=0.52, rely=0.39, height=21, width=82)
+        self.Flags.place(relx=0.45, rely=0.39, height=21, width=112)
         self.Flags.configure(activebackground="#f9f9f9")
         self.Flags.configure(activeforeground="black")
         self.Flags.configure(background="#eaeaea")
@@ -1594,7 +1688,6 @@ class Telemetria_Auto_Escolta:
         self.menubar = Menu(self.top,font=font9,bg=_bgcolor,fg=_fgcolor)
         self.top.configure(menu = self.menubar)
 
-
         #Asignación inicial del tamaño de la tabla de la Batería
         Tabla(self.LabelframeBateria, 9,12)
 
@@ -1610,13 +1703,14 @@ class Telemetria_Auto_Escolta:
         set(self.LabelframeBateria, 0, 10, "Cell 6 mV")
         set(self.LabelframeBateria, 0, 11, "Cell 7 mV")
 
-
+        #Paneles
         path = r"Panel.png"
         filename = PhotoImage(file= path)
         self.background_label = Label(self.Frame1, image=filename)
         self.background_label.image = filename
         self.background_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
+        #Aletra de Paneles
         path0 = "PanelAlert.gif"
         filename0 = PhotoImage(file= path0, format="gif")
         self.background_label0 = Label(self.Frame2, image=filename0)
@@ -1633,32 +1727,109 @@ class Telemetria_Auto_Escolta:
         print(random.randint(0, 1))
         self.frames = [PhotoImage(file='PanelAlert.gif',format = 'gif -index %i' %(i)) for i in range(4)]
 
+        #Gráfico de GPS
+        self.f = Figure(figsize=(5, 4), dpi=100)
+        self.a = self.f.add_subplot(111)
+        self.t = arange(0.0, 3.0, 0.01)
+        self.s = sin(2*pi*self.t)
 
-        f = Figure(figsize=(5, 4), dpi=100)
-        a = f.add_subplot(111)
-        t = arange(0.0, 3.0, 0.01)
-        s = sin(2*pi*t)
+        self.circ = plt.Circle((2, 0), radius=0.1, color='g', fill =False)
+        self.a.add_patch(self.circ)
 
-        circ = plt.Circle((2, 0), radius=0.1, color='g', fill =False)
-        a.add_patch(circ)
-
-        a.plot(t, s)
-        a.plot(2.0,sin(2*pi*2),linestyle='--', marker='o', color='b')
-        a.set_title('Longitud vs latitud')
-        a.set_xlabel('X Longitud')
-        a.set_ylabel('Y Latitud ')
+        self.a.plot(self.t, self.s)
+        self.a.plot(2.0,sin(2*pi*2),linestyle='--', marker='o', color='b')
+        self.a.set_title('Longitud vs latitud')
+        self.a.set_xlabel('X Longitud')
+        self.a.set_ylabel('Y Latitud ')
 
         # a tk.DrawingArea
-        canvas = FigureCanvasTkAgg(f, self.TabGPS)
-        canvas.show()
-        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
-        canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
+        self.canvas = FigureCanvasTkAgg(self.f, self.LabelLatitudLongitud)
+        self.canvas.show()
+        self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+        self.canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
+        #self.canvas.configure(width=760)
 
 
+        self.fun = Figure(figsize=(5, 4), dpi=100)
+        self.range = self.fun.add_subplot(111)
+        self.trange = arange(0.0, 3.0, 0.01)
+        self.set = cos(2*pi*self.t)
+
+        self.circ = plt.Circle((2, cos(2*pi*0)), radius=0.1, color='g', fill =False)
+        self.range.add_patch(self.circ)
+
+        self.range.plot(self.trange, self.set)
+        self.range.plot(2.0,cos(2*pi*2),linestyle='--', marker='o', color='b')
+        self.range.set_title('Longitud vs latitud')
+        self.range.set_xlabel('X Longitud')
+        self.range.set_ylabel('Y Latitud ')
+
+        # a tk.DrawingArea
+        self.canvasGPS = FigureCanvasTkAgg(self.fun, self.LabelGPS)
+        self.canvasGPS.show()
+        self.canvasGPS.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+        self.canvasGPS._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
         
+
+        #######################################
+        #########Iniciando Oberserver##########
+        #######################################
+        self.batObserver = BateriasObserver()
+        self.drvObserver = ControladorObserver()
+        self.motObserver = MotorObserver()
+
+        self.drvObserver.connect()#inicia la comunicación con el cambus
+
+
+        ## Inicializando variables del Motor observado
+        self.motorActivo= 0
+        self.mcurrent = 0
+        self.mvoltage = 0
+        self.mvelocidad = 0
+        self.mRPM = 0
+        self.mphaseC = 0
+        self.mphaseB = 0
+        self.mvoltage_1= 0
+        self.mvoltage_2= 0
+        self.mvoltage_3= 0
+        self.mvoltage_4= 0
+        self.mTmotor= 0
+        self.mTDSP= 0
+        self.mOdo= 0
+        self.mAH= 0    
+        
+        ## Inicializando variables de las Baterias observadas
+        self.bCB1 = {'SN':'0','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
+        self.bCB2 = {'SN':'0','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
+        self.bCB3 = {'SN':'0','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
+        self.bCB4 = {'SN':'0','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
+        self.bCB5 = {'SN':'0','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
+        self.bCB6 = {'SN':'0','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
+        self.bSOCah = 0.0
+        self.bSOCp = 0.0
+
+        self.bminVolt = { 'mV': 0.0, 'CMUNumber':0,'CellNumber':0}
+        self.bmaxVolt = { 'mV': 0.0, 'CMUNumber':0,'CellNumber':0}
+        self.bminTemp = { 'mT': 0.0, 'CMUNumber':0}
+        self.bmaxTemp = { 'mT': 0.0, 'CMUNumber':0}
+
+
+        ## Inicializando variables del controlador observadas
+        self.creverse = False
+        self.cneutral = False
+        self.cregen = False
+        self.cdrive = False
+        self.caccesories = False
+        self.crun = False
+        self.cstart = False
+        self.cbrakes = False
+        self.cfueldoor = False
+        self.cspCurrent = 0.0
+        self.cspBusCurrent = 0.0
+        self.cspVelocity = 0.0 
+
         self.clock()
 
 
 if __name__ == '__main__':
-
     vp_start_gui()
