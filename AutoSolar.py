@@ -25,6 +25,7 @@ from botonesObservable import *
 
 matplotlib.use('TkAgg')
 
+from tkinter import filedialog
 from matplotlib import *
 import numpy as np
 from math import sqrt
@@ -56,19 +57,6 @@ def destroy_Telemetria_Auto_Escolta():
     w.destroy()
     w = None
 
-
-
-def open_file(name):
-        datos = open(name)
-        datos.readline()
-        dato = datos.readline().strip().split(",")
-        gps = np.array([[float(dato[2]), float(dato[3]), float(dato[4]), float(dato[5])]])
-
-        for linea in datos.readlines():
-            dato = linea.strip().split(",")
-            gps = np.append(gps, [[float(dato[2]), float(dato[3]), float(dato[4]), float(dato[5])]], axis=0) #LAT,LONG,ALT,DIST
-        datos.close()
-        return dato,gps
 
 
 def Tabla(Frame,rows,columns):
@@ -117,6 +105,72 @@ def setterControlador(this,valor):
         this.configure(foreground="#7c7c7c")
 
 
+def open_file(name):
+        datos = open(name)
+        datos.readline()
+        dato = datos.readline().strip()
+        dato = tsplit(dato,",;")
+        gps = np.array([[float(dato[2]), float(dato[3]), float(dato[4]), float(dato[5])]])
+
+        for linea in datos.readlines():
+            dato = linea.strip()
+            dato = tsplit(dato,",;")
+            gps = np.append(gps, [[float(dato[2]), float(dato[3]), float(dato[4]), float(dato[5])]], axis=0) #LAT,LONG,ALT,DIST
+        datos.close()
+        return dato,gps
+
+def tsplit(s, sep):
+    stack = [s]
+    for char in sep:
+        pieces = []
+        for substr in stack:
+            pieces.extend(substr.split(char))
+        stack = pieces
+    return stack
+
+def abrir(f,a,p,error,posicion,canvas):
+    archivo=filedialog.askopenfilename()
+    if(archivo == ''):
+        return 0,0
+    datos = open(archivo,"r")
+    datos.readline()
+    dato = datos.readline().strip()
+    dato = tsplit(dato,",;")
+    gps = np.array([[float(dato[2]), float(dato[3]), float(dato[4]), float(dato[5])]])
+
+    for linea in datos.readlines():
+        dato = linea.strip()
+        dato = tsplit(linea,",;")
+        gps = np.append(gps, [[float(dato[2]), float(dato[3]), float(dato[4]), float(dato[5])]], axis=0) #LAT,LONG,ALT,DIST
+    datos.close()
+
+    #se crea la figura con un color de fondo
+    f = plt.figure(figsize=(5, 4), dpi=100, facecolor = (0.9294,0.9137,0.8667))
+    a = f.add_subplot(111)
+
+    #se grafica la ruta y los marker del gps
+    #x = np.arange(len(gps[:,2]))
+    plt.plot(gps[:,3], gps[:,2], color=(0, 0.7, 0.2))
+    plt.fill_between(gps[:,3], gps[:,2], np.min(gps[:,2]),color=(0.5,0,0,0.5))
+    #marcar gps
+    p = gpsVsPosiciones(gps, gps[0][0], gps[0][1])
+
+    error = plt.plot(gps[p][3], gps[p][2], marker='o', color=(0.1647,0.4157,1, 0.5), markersize=20)
+    posicion = plt.plot(gps[p][3], gps[p][2], marker='o', color=(0.1647,0.4157,1), markersize=6)
+
+    a.grid(True) #crear grid
+    a.set_title('Grafico de Perfil')
+
+    # a tk.DrawingArea para el 1er Grafico de latitud VS altitud
+    canvas.show()
+    canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+    canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
+    #canvas.configure(width=760)
+
+
+    return dato,gps
+
+
 def gpsVsPosiciones(gps, latitud, longitud):
     posicion = 0
     distancia = sqrt((gps[0][0] - latitud)**2 + (gps[0][1] - longitud)**2)
@@ -130,6 +184,7 @@ def gpsVsPosiciones(gps, latitud, longitud):
     return posicion
 
 class Telemetria_Auto_Escolta:
+
     #TODO DENTRO DE CLOCK SE REALIZA UNA Y OTRA VEZ
     def clock(self,ind =0):
 
@@ -250,27 +305,27 @@ class Telemetria_Auto_Escolta:
         ##############Cambios en el GPS#################
         ################################################
 
-        ##TODO: CAMBIAR POR LO QUE REALMENTE HACE EL GPS <--------------------------------------------------------------------------------------------------------
-        if(self.inicia == len(self.gps)-1):
-            self.inicia = -1
+        ##TODO: CAMBIAR POR LO QUE REALMENTE HACE EL GPS <-----
+        #if(self.inicia == len(self.gps)-1):
+        #    self.inicia = -1
 
-        self.inicia = self.inicia+1
-        self.p = self.gps[self.inicia] #LAT,LONG,ALT,DIST
-        print(self.p)
-        po = gpsVsPosiciones(self.gps, self.p[0], self.p[1])
+        #self.inicia = self.inicia+1
+        #self.p = self.gps[self.inicia] #LAT,LONG,ALT,DIST
+        #print(self.p)
+        self.p = [self.glat,self.glon,self.galt]
+        po = gpsVsPosiciones(self.gps, self.glat, self.glon)
         self.error[0].set_data(self.gps[po][3],self.gps[po][2]) #actualizar valores
         self.posicion[0].set_data(self.gps[po][3], self.gps[po][2])
-
-        print("what?")
         self.f.canvas.draw()
 
-        self.p1 = self.gps[self.inicia]
-        self.error2[0].set_data(self.p1[1],self.p1[0]) #actualizar valores
-        self.posicion2[0].set_data(self.p1[1], self.p1[0])
+        #self.p1 = self.gps[self.inicia]
+        self.error2[0].set_data(self.gps[po][1],self.gps[po][0]) #actualizar valores
+        self.posicion2[0].set_data(self.gps[po][1], self.gps[po][0])
         self.fun.canvas.draw()
 
 
-
+        print("what?")
+        
         #RADOMIZADOR INICIAL
         that = random.randint(0, 100) 
         that0 =random.randint(0, 100) 
@@ -1850,14 +1905,14 @@ class Telemetria_Auto_Escolta:
         self.background_label1.image = filename
         self.background_label1.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        print(random.randint(0, 1))
         self.frames = [PhotoImage(file='PanelAlert.gif',format = 'gif -index %i' %(i)) for i in range(4)]
 
         ########################
         ####Gráfico de GPS######
         ########################
 
-        self.dato, self.gps=open_file("LasVizcachas_2.csv")
+        archivo=filedialog.askopenfilename()
+        self.dato, self.gps=open_file(archivo)
         self.dato2 = self.dato
         self.gps2 = self.gps
 
@@ -1868,7 +1923,7 @@ class Telemetria_Auto_Escolta:
         
 
         #se grafica la ruta y los marker del gps
-        self.x = np.arange(len(self.gps[:,2]))
+        #self.x = np.arange(len(self.gps[:,2]))
         plt.plot(self.gps[:,3], self.gps[:,2], color=(0, 0.7, 0.2))
         plt.fill_between(self.gps[:,3], self.gps[:,2], np.min(self.gps[:,2]),color=(0.5,0,0,0.5))
         #marcar gps
@@ -1881,7 +1936,7 @@ class Telemetria_Auto_Escolta:
         self.a.set_title('Grafico de Perfil')
 
 
-        # a tk.DrawingArea
+        # a tk.DrawingArea para el 1er Grafico de latitud VS altitud
         self.canvas = FigureCanvasTkAgg(self.f, self.LabelLatitudLongitud)
         self.canvas.show()
         self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
@@ -1908,7 +1963,19 @@ class Telemetria_Auto_Escolta:
         self.canvasGPS.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
         self.canvasGPS._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
         
-        self.inicia = -1
+        #self.inicia = -1
+
+        self.Button1 = Button(self.LabelGPS, command= lambda: abrir(self.f,self.a,self.p,self.error,self.posicion,self.canvas))
+        self.Button1.place(relx=0.84, rely=0.94, height=24, width=115)
+        self.Button1.configure(activebackground="#d9d9d9")
+        self.Button1.configure(activeforeground="#000000")
+        self.Button1.configure(background="#eaeaea")
+        self.Button1.configure(disabledforeground="#a3a3a3")
+        self.Button1.configure(foreground="#000000")
+        self.Button1.configure(highlightbackground="#d9d9d9")
+        self.Button1.configure(highlightcolor="black")
+        self.Button1.configure(pady="0")
+        self.Button1.configure(text='''Seleccionar Archivo''')
 
 
         #######################################
@@ -1988,8 +2055,8 @@ class Telemetria_Auto_Escolta:
         self.mcorriente = 0.0
 
         ##Inicializando variables del GPS observadas
-        self.glat        = 0.0 #latitud:float
-        self.glon        = 0.0 #longitud:float
+        self.glat        = self.gps[0][0] #latitud:float
+        self.glon        = self.gps[0][1] #longitud:float
         self.galt        = 0.0 #altitud:float
         self.gerr        = 0 #error[metros]:int
         self.glastUpdate = datetime.fromtimestamp(0.0)#ultima vez actualizado:datetime
