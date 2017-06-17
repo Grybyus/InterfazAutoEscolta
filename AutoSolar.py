@@ -16,13 +16,14 @@ import AutoSolar_support
 import random
 import time
 import matplotlib
+import os.path
 from BateriasObserver import *
 from ControladorObserver import *
 from MotorObserver import *
 from mpptObservable import *
 from gpsObservable import *
 from botonesObservable import *
-
+from controller.controller import *
 matplotlib.use('TkAgg')
 
 from tkinter import filedialog
@@ -215,6 +216,12 @@ class Telemetria_Auto_Escolta:
             self.mOdo= motor.odometro
             self.mAH= motor.ah
 
+            save(([str(self.motorActivo),str(self.mcurrent) ,str(self.mvoltage),
+            str(self.mvelocidad) ,str(self.mRPM) ,str(self.mphaseC) ,str(self.mphaseB) ,
+            str(self.mvoltage_1),str(self.mvoltage_2),str(self.mvoltage_3),
+            str(self.mvoltage_4),str(self.mTmotor),str(self.mTDSP),str(self.mOdo),
+            str(self.mAH)]), "motor"+str(self.motori)+".csv") #repr(motor.getErrorMSG()),repr(motor.getFlagsM)SG())]),
+
             self.motObserver.updated=False
         else:
             setter(self.Errores,'No hay errores')
@@ -237,6 +244,10 @@ class Telemetria_Auto_Escolta:
             self.bmaxVolt = bateria.maxVolt #{ 'mV': 0.0, 'CMUNumber':0,'CellNumber':0}
             self.bminTemp = bateria.minTemp #{ 'mT': 0.0, 'CMUNumber':0}
             self.bmaxTemp = bateria.maxTemp #{ 'mT': 0.0, 'CMUNumber':0}
+            save(([str(self.bCB1),str(self.bCB2),str(self.bCB3),str(self.bCB4),str(self.bCB5),
+                str(self.bCB6),str(self.bSOCah),str(self.bSOCp),str(self.bminVolt),
+                str(self.bmaxVolt),str(self.bminTemp),str(self.bmaxTemp)]),"Baterias"+str(self.Bateriasi)+".csv")
+
             self.batObserver.updated=False
 
 
@@ -255,6 +266,10 @@ class Telemetria_Auto_Escolta:
             self.cspCurrent = driver.spCurrent#0.0
             self.cspBusCurrent = driver.spBusCurrent# 0.0
             self.cspVelocity = driver.spVelocity#0.0 
+            save(([str(self.creverse),str(self.cneutral),str(self.cregen),str(self.cdrive),
+                str(self.caccesories),str(self.crun),str(self.cstart),str(self.cbrakes),
+                str(self.cfueldoor),str(self.cspCurrent),str(self.cspBusCurrent),
+                str(self.cspVelocity)]),"Controlador"+str(self.Controladori)+".csv")
             self.drvObserver.updated=False
 
         #Obteniedo variables del observer de los mppts solo si hay algún cambio
@@ -272,6 +287,7 @@ class Telemetria_Auto_Escolta:
             self.mt1        = mpptss.t1        # 0.0
             self.mt2        = mpptss.t2        # 0.0
             self.mcorriente = mpptss.corriente # 0.0
+            save(([str(self.mVin),str(self.mIin),str(self.mVout),str(self.mbulr),str(self.mout),str(self.mnoe),str(self.mundv),str(self.mt),str(self.mt1),str(self.mt2),str(self.mcorriente)]),"Mppt"+str(self.Mppti )+".csv")
             self.mpptObserver.updated=False
 
         #Obteniedo variables del observer del GPS solo si hay algún cambio
@@ -284,6 +300,7 @@ class Telemetria_Auto_Escolta:
             self.gerr        = gpss.err        #0 #error[metros]:int
             self.glastUpdate = gpss.lastUpdate #datetime.fromtimestamp(0.0)#ultima vez actualizado:datetime
             self.gheading    = gpss.heading    #0.0 #grados de inclinacion respecto de la direccion[grados]:float
+            save(([str(self.glat),str(self.glon),str(self.galt),str(self.gerr),str(self.glastUpdate),str(self.gheading)]),"GPS"+str(self.GPSi)+".csv")
             self.gpsObserver.updated=False
 
         #Obteniedo variables del observer de los Botones solo si hay algún cambio
@@ -299,6 +316,7 @@ class Telemetria_Auto_Escolta:
             self.blucesEm   = botones.lucesEm   # False
             self.bfan       = botones.fan       # 0#int 32 //[0-255]
             self.bbateria   = botones.bateria   # False# int 32 //flag
+            save(([str(self.bmppt),str(self.bpan1),str(self.bpan2),str(self.bpan3),str(self.blucesAl),str(self.blucesBa),str(self.blucesEm),str(self.bfan),str(self.bbateria)]),"botones"+str(botonesi)+".csv")
             self.botObserver.updated=False
 
         ################################################
@@ -318,6 +336,8 @@ class Telemetria_Auto_Escolta:
         self.posicion[0].set_data(self.gps[po][3], self.gps[po][2])
         self.f.canvas.draw()
 
+        self.distanciaFaltante = self.maxDist - self.gps[po][3]
+        setter(self.LabelDistFalt,'Distancia Faltante: '+str(self.distanciaFaltante))
         #self.p1 = self.gps[self.inicia]
         self.error2[0].set_data(self.gps[po][1],self.gps[po][0]) #actualizar valores
         self.posicion2[0].set_data(self.gps[po][1], self.gps[po][0])
@@ -345,7 +365,7 @@ class Telemetria_Auto_Escolta:
         setter(self.RPM,'%.f'%(self.mRPM)+' RPM')
 
         # POTENCIA
-        setter(self.POTENCIA,str(self.mvoltage*self.mcurrent)+' W')
+        setter(self.POTENCIA,'%.f1'%(self.mvoltage*self.mcurrent)+' W')
 
         # Barra y Porcentaje de Velocidad
         setter(self.SetVelocityPorcentaje,str(round(int(self.cspVelocity))))
@@ -1564,6 +1584,13 @@ class Telemetria_Auto_Escolta:
         self.StartLabel.configure(highlightcolor="black")
         self.StartLabel.configure(text='''Start''')
 
+        self.LabelDistFalt = Label(self.LabelframeEstadoControl)
+        self.LabelDistFalt.place(relx=0.33, rely=0.66, height=21, width=150)
+        self.LabelDistFalt.configure(background="#eaeaea")
+        self.LabelDistFalt.configure(disabledforeground="#a3a3a3")
+        self.LabelDistFalt.configure(foreground="#000000")
+        self.LabelDistFalt.configure(text='''Distancia Faltante: --------''')
+
         self.BrakesLabel = Label(self.LabelframeEstadoControl)
         self.BrakesLabel.place(relx=0.67, rely=0.26, height=21, width=40)
         self.BrakesLabel.configure(activebackground="#f9f9f9")
@@ -1915,7 +1942,8 @@ class Telemetria_Auto_Escolta:
         self.dato, self.gps=open_file(archivo)
         self.dato2 = self.dato
         self.gps2 = self.gps
-
+        self.maxDist = self.gps[len(self.gps)-1][3]
+        self.distanciaFaltante = self.gps[len(self.gps)-1][3]
         #se crea la figura con un color de fondo
         self.f = plt.figure(figsize=(5, 4), dpi=100, facecolor = (0.9294,0.9137,0.8667))
         self.a = self.f.add_subplot(111)
@@ -1977,7 +2005,6 @@ class Telemetria_Auto_Escolta:
         self.Button1.configure(pady="0")
         self.Button1.configure(text='''Seleccionar Archivo''')
 
-
         #######################################
         #########Iniciando Oberserver##########
         #######################################
@@ -1994,21 +2021,21 @@ class Telemetria_Auto_Escolta:
 
         ## Inicializando variables del Motor observado
         self.motorActivo= 0
-        self.mcurrent = 0
-        self.mvoltage = 0
-        self.mvelocidad = 0
-        self.mRPM = 0
-        self.mphaseC = 0
-        self.mphaseB = 0
-        self.mvoltage_1= 0
-        self.mvoltage_2= 0
-        self.mvoltage_3= 0
-        self.mvoltage_4= 0
-        self.mTmotor= 0
-        self.mTDSP= 0
-        self.mOdo= 0
-        self.mAH= 0    
-        
+        self.mcurrent = 0.0
+        self.mvoltage = 0.0
+        self.mvelocidad = 0.0
+        self.mRPM = 0.0
+        self.mphaseC = 0.0
+        self.mphaseB = 0.0
+        self.mvoltage_1= 0.0
+        self.mvoltage_2= 0.0
+        self.mvoltage_3= 0.0
+        self.mvoltage_4= 0.0
+        self.mTmotor= 0.0
+        self.mTDSP= 0.0
+        self.mOdo= 0.0
+        self.mAH= 0.0    
+
         ## Inicializando variables de las Baterias observadas
         self.bCB1 = {'SN':'0','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
         self.bCB2 = {'SN':'0','t_PCB':0.0,'t_Cell':0.0,'v_Cells':[0,0,0,0,0,0,0,0]}
@@ -2073,7 +2100,58 @@ class Telemetria_Auto_Escolta:
         self.bfan       = 0#int 32 //[0-255]
         self.bbateria   = False# int 32 //flag
 
-
+        #####################################################
+        #######Crear Archivos de Guardado de Datos ##########
+        #####################################################
+        
+        auxenter = True
+        self.motori = 0
+        while(auxenter):
+            if(not os.path.isfile("motor"+str(self.motori)+".csv")):
+                auxFile = open("motor"+str(self.motori)+".csv","w")
+                auxenter = False
+            else:
+                self.motori = self.motori+1
+        auxenter = True
+        self.Bateriasi = 0
+        while(auxenter):
+            if(not os.path.isfile("Baterias"+str(self.Bateriasi)+".csv")):
+                auxFile = open("Baterias"+str(self.Bateriasi)+".csv","w")
+                auxenter = False
+            else:
+                self.Bateriasi = self.Bateriasi+1
+        auxenter = True
+        self.Controladori = 0
+        while(auxenter):
+            if(not os.path.isfile("Controlador"+str(self.Controladori)+".csv")):
+                auxFile = open("Controlador"+str(self.Controladori)+".csv","w")
+                auxenter = False
+            else:
+                self.Controladori = self.Controladori+1
+        auxenter = True
+        self.Mppti = 0
+        while(auxenter):
+            if(not os.path.isfile("Mppt"+str(self.Mppti )+".csv")):
+                auxFile = open("Mppt"+str(self.Mppti )+".csv","w")
+                auxenter = False
+            else:
+                self.Mppti  = self.Mppti +1
+        auxenter = True
+        self.GPSi = 0
+        while(auxenter):
+            if(not os.path.isfile("GPS"+str(self.GPSi)+".csv")):
+                auxFile = open("GPS"+str(self.GPSi)+".csv","w")
+                auxenter = False
+            else:
+                self.GPSi = self.GPSi+1
+        auxenter = True
+        self.botonesi = 0
+        while(auxenter):
+            if(not os.path.isfile("botones"+str(self.botonesi)+".csv")):
+                auxFile = open("botones"+str(self.botonesi)+".csv","w")
+                auxenter = False
+            else:
+                self.botonesi = self.botonesi+1
 
         self.clock()
 
