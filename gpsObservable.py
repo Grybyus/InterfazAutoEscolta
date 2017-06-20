@@ -16,7 +16,6 @@ class gpsObservable(object):
 		self.alt        = 0.0 #altitud:float
 		self.err        = 0 #error[metros]:int
 		self.lastUpdate = datetime.fromtimestamp(0.0)#ultima vez actualizado:datetime
-		self.heading    = 0.0 #grados de inclinacion respecto de la direccion[grados]:float
 		#observadores
 		self.observers = []
 		self.receiver.addEventHandler(UDPTools.GPS_STRUCT,self,self.gpsUpdateHandler)
@@ -27,7 +26,6 @@ class gpsObservable(object):
 		self.alt         = datos[3]
 		self.err         = datos[4]
 		self.lastUpdate  = datetime.fromtimestamp(datos[5])
-		self.heading     = datos[6]
 		self.updated     = True
 		self.notifyAll()
 
@@ -43,8 +41,8 @@ class gpsObservable(object):
 if __name__ == '__main__':
 	#prueba funcional
 	def handler(gps):
-		print ("----\nlat:{0},lon:{1}\nalt:{2},err:{3}[mts]\nlu:{4}\n{5}º\n----"
-				.format(gps.lat,gps.lon,gps.alt,gps.err,gps.lastUpdate,gps.heading))
+		print ("----\nlat:{0},lon:{1}\nalt:{2},err:{3}[mts]\nlu:{4}\n----"
+				.format(gps.lat,gps.lon,gps.alt,gps.err,gps.lastUpdate))
 	gps = gpsObservable()
 	gps.register(handler)
 	input("presione cualquier tecla para continuar\n")

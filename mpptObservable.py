@@ -10,14 +10,17 @@ class mpptObservable(object):
 		if not self.receiver.running:
 			self.receiver.open()
 		#estructura principal
-		self.Vin       = 0.0
-		self.Iin       = 0.0
-		self.Vout      = 0.0
-		self.bulr      = 0.0
-		self.out       = 0.0
-		self.noe       = 0.0
-		self.undv      = 0.0
-		self.t         = 0.0
+		self.paneles   =[{},{},{}]
+		for i in range(3):
+			self.paneles[i].panelID   = i+1
+			self.paneles[i].Vin       = 0.0
+			self.paneles[i].Iin       = 0.0
+			self.paneles[i].Vout      = 0.0
+			self.paneles[i].bulr      = 0.0
+			self.paneles[i].out       = 0.0
+			self.paneles[i].noe       = 0.0
+			self.paneles[i].undv      = 0.0
+			self.paneles[i].t         = 0.0
 		#estructura extra
 		self.t1        = 0.0
 		self.t2        = 0.0
@@ -28,15 +31,16 @@ class mpptObservable(object):
 		self.receiver.addEventHandler(UDPTools.EXTRAMPPT_STRUCT,self,self.extraUpdateHandler)
 
 	def mpptUpdateHandler(self,obj,datos):
-		self.Vin       = datos[1]
-		self.Iin       = datos[2]
-		self.Vout      = datos[3]
-		self.bulr      = datos[4]
-		self.out       = datos[5]
-		self.noe       = datos[6]
-		self.undv      = datos[7]
-		self.t         = datos[8]
-		self.updated   = True
+		self.panelID               = datos[1]
+		self.paneles[panelID-1].Vin  = datos[2]
+		self.paneles[panelID-1].Iin  = datos[3]
+		self.paneles[panelID-1].Vout = datos[4]
+		self.paneles[panelID-1].bulr = datos[5]
+		self.paneles[panelID-1].out  = datos[6]
+		self.paneles[panelID-1].noe  = datos[7]
+		self.paneles[panelID-1].undv = datos[8]
+		self.paneles[panelID-1].t    = datos[9]
+		self.updated               = True
 		self.notifyAll()
 
 	def extraUpdateHandler(self,obj,datos):
