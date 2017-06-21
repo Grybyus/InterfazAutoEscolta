@@ -1,6 +1,7 @@
 from multiprocessing import Process, Queue
 import time
 from udptools import UDPTools
+from Paneles import Paneles
 
 def singleton(class_):
   instances = {}
@@ -41,9 +42,23 @@ class gpsCatcherTask(object):
 	def __del__(self):
 		print("gpsCatcher Muere")
 	def run(self):
-		while True:
-			time.sleep(self.w)
-			self.q.put(('GPS',(-33.5333501,-70.5882452,600,10,2016,25.6),))
+		if os.name=='posix':
+			while True:
+				from .Gps import Gps
+				try:
+					gps = Gps()
+					alt_ant=8849
+					mode,lat,lon,alt,err,heading=gps.solicitar_ubicacion()
+					if(mode==2):
+						UDPTools.Send_GPS(float(lat),float(lon),
+										float(alt),int(err),time.time())
+					elif(mode==3):
+						alt_ant=alt
+						UDPTools.Send_GPS(float(lat),float(lon),float(alt),int(err),time.time())
+		else:		
+			while True:
+				time.sleep(self.w)
+				self.q.put(('GPS',(-33.5333501,-70.5882452,600,10,2016,25.6),))
 
 class i2cCatcherTask(object):
 	"""docstring for gpsCrawler"""
@@ -53,12 +68,25 @@ class i2cCatcherTask(object):
 	def __del__(self):
 		print("i2cCatcher Muere")
 	def run(self):
-		while True:
-			time.sleep(self.w)
-			self.q.put(('MPPT',(25.5333501,1.0,18.6,1,2,3,4,20.4),))
-			time.sleep(self.w/2)
-			self.q.put(('EXTRA',(25.5333501,20.4,1.6),))
-			time.sleep(self.w/3)
+		if os.name=='posix':
+			while True:
+				from .Paneles import Paneles
+				p = Paneles()
+				time.sleep(self.w/5)
+				self.q.put(('MPPT',p.solicitar_datos(0x01)))
+				time.sleep(self.w/4)
+				self.q.put(('MPPT',p.solicitar_datos(0x02)))
+				time.sleep(self.w/3)
+				self.q.put(('MPPT',p.solicitar_datos(0x03)))
+				time.sleep(self.w/2)
+				self.q.put(('EXTRA',p.solicitar_datos(0x04)))
+		else:
+			while True:
+				time.sleep(self.w)
+				self.q.put(('MPPT',(1,25.5333501,1.0,18.6,1,0,0,1,20.4),))
+				time.sleep(self.w/2)
+				self.q.put(('EXTRA',(25.5333501,20.4,1.6),))
+				time.sleep(self.w/3)
 
 @singleton
 class stateSender(object):
@@ -80,7 +108,6 @@ class stateSender(object):
 		luces = (0,1<<0)[lucesAl]|(0,1<<1)[lucesBa]|(0,1<<2)[lucesEm]|(0,1<<3)[pan3]
 		self.q.put(('BOTONES',(mppt,luces,fan,(0,1)[bateria],),))
 
-		pass
 	def kill(self):
 		self.procesoSender.terminate()
 		self.procesoGPS.terminate()
