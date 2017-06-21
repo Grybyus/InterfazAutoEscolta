@@ -1,7 +1,7 @@
 from multiprocessing import Process, Queue
 import time
 from udptools import UDPTools
-from Paneles import Paneles
+import os
 
 def singleton(class_):
   instances = {}
@@ -50,15 +50,16 @@ class gpsCatcherTask(object):
 					alt_ant=8849
 					mode,lat,lon,alt,err,heading=gps.solicitar_ubicacion()
 					if(mode==2):
-						UDPTools.Send_GPS(float(lat),float(lon),
-										float(alt),int(err),time.time())
+						UDPTools.Send_GPS(float(lat),float(lon),float(alt),int(err),time.time())
 					elif(mode==3):
 						alt_ant=alt
 						UDPTools.Send_GPS(float(lat),float(lon),float(alt),int(err),time.time())
-		else:		
+				except:
+					pass
+		else:
 			while True:
 				time.sleep(self.w)
-				self.q.put(('GPS',(-33.5333501,-70.5882452,600,10,2016,25.6),))
+				self.q.put(('GPS',(-33.5333501,-70.5882452,600,10,2016),))
 
 class i2cCatcherTask(object):
 	"""docstring for gpsCrawler"""

@@ -274,7 +274,7 @@ class Telemetria_Auto_Escolta:
 
         #Obteniedo variables del observer de los mppts solo si hay algún cambio
         if self.mpptObserver.updated:
-            mpptss = self.mpptObserver.mppt()
+            mpptss = self.mpptObserver
 
             self.mVin1       = mpptss.paneles[0]["Vin"] # 0.0
             self.mIin1       = mpptss.paneles[0]["Iin"]       # 0.0
@@ -313,7 +313,7 @@ class Telemetria_Auto_Escolta:
 
         #Obteniedo variables del observer del GPS solo si hay algún cambio
         if self.gpsObserver.updated:
-            gpss = self.gpsObserver.gps()
+            gpss = self.gpsObserver
             #estructura gps
             self.glat        = gpss.lat        #0.0 #latitud:float
             self.glon        = gpss.lon        #0.0 #longitud:float
@@ -325,7 +325,7 @@ class Telemetria_Auto_Escolta:
 
         #Obteniedo variables del observer de los Botones solo si hay algún cambio
         if self.botObserver.updated:
-            botones = self.botObserver.botones()
+            botones = self.botObserver
             #estructura principal
             self.bmppt      = botones.mppt      # False#int 32 //flag
             self.bpan1      = botones.pan1      # False
@@ -336,7 +336,7 @@ class Telemetria_Auto_Escolta:
             self.blucesEm   = botones.lucesEm   # False
             self.bfan       = botones.fan       # 0#int 32 //[0-255]
             self.bbateria   = botones.bateria   # False# int 32 //flag
-            save(([str(self.bmppt),str(self.bpan1),str(self.bpan2),str(self.bpan3),str(self.blucesAl),str(self.blucesBa),str(self.blucesEm),str(self.bfan),str(self.bbateria)]),"botones"+str(botonesi)+".csv")
+            save(([str(self.bmppt),str(self.bpan1),str(self.bpan2),str(self.bpan3),str(self.blucesAl),str(self.blucesBa),str(self.blucesEm),str(self.bfan),str(self.bbateria)]),"botones"+str(self.botonesi)+".csv")
             self.botObserver.updated=False
 
         ################################################
@@ -565,12 +565,14 @@ class Telemetria_Auto_Escolta:
             self.background_label.configure(image=frame3)
             setter(self.ErrorPanel1,str('Desconectado'))
         else:
+            self.background_label.configure(image=self.frames[0])
             setter(self.ErrorPanel1,str('No hay errores'))
 
         if (self.mVin2==0.0):
             self.background_label0.configure(image=frame2)
             setter(self.ErrorPanel2,str('Desconectado'))
         else:
+            self.background_label0.configure(image=self.frames[0])
             setter(self.ErrorPanel2,str('No hay errores'))
 
 
@@ -579,6 +581,7 @@ class Telemetria_Auto_Escolta:
             self.background_label1.configure(image=frame)
             setter(self.ErrorPanel3,str('Desconectado'))
         else:
+            self.background_label1.configure(image=self.frames[0])
             setter(self.ErrorPanel3,str('No hay errores'))
       
         print(self.mVin1)
