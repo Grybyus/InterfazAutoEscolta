@@ -275,19 +275,40 @@ class Telemetria_Auto_Escolta:
         #Obteniedo variables del observer de los mppts solo si hay algún cambio
         if self.mpptObserver.updated:
             mpptss = self.mpptObserver.mppt()
-            self.mVin       = mpptss.Vin       # 0.0
-            self.mIin       = mpptss.Iin       # 0.0
-            self.mVout      = mpptss.Vout      # 0.0
-            self.mbulr      = mpptss.bulr      # 0.0
-            self.mout       = mpptss.out       # 0.0
-            self.mnoe       = mpptss.noe       # 0.0
-            self.mundv      = mpptss.undv      # 0.0
-            self.mt         = mpptss.t         # 0.0
+
+            self.mVin1       = mpptss.paneles[0]["Vin"] # 0.0
+            self.mIin1       = mpptss.paneles[0]["Iin"]       # 0.0
+            self.mVout1      = mpptss.paneles[0]["Vout"]     # 0.0
+            self.mbulr1      = mpptss.paneles[0]["bulr"]      # 0.0
+            self.mout1       = mpptss.paneles[0]["out"]      # 0.0
+            self.mnoe1       = mpptss.paneles[0]["noe"]      # 0.0
+            self.mundv1      = mpptss.paneles[0]["undv"]     # 0.0
+            self.mt1         = mpptss.paneles[0]["t"]         # 0.0
+
+            self.mVin2       = mpptss.paneles[1]["Vin"] # 0.0
+            self.mIin2       = mpptss.paneles[1]["Iin"]       # 0.0
+            self.mVout2      = mpptss.paneles[1]["Vout"]     # 0.0
+            self.mbulr2      = mpptss.paneles[1]["bulr"]      # 0.0
+            self.mout2       = mpptss.paneles[1]["out"]      # 0.0
+            self.mnoe2       = mpptss.paneles[1]["noe"]      # 0.0
+            self.mundv2      = mpptss.paneles[1]["undv"]     # 0.0
+            self.mt2         = mpptss.paneles[1]["t"]         # 0.0
+
+            self.mVin3       = mpptss.paneles[2]["Vin"] # 0.0
+            self.mIin3       = mpptss.paneles[2]["Iin"]       # 0.0
+            self.mVout3      = mpptss.paneles[2]["Vout"]     # 0.0
+            self.mbulr3      = mpptss.paneles[2]["bulr"]      # 0.0
+            self.mout3       = mpptss.paneles[2]["out"]      # 0.0
+            self.mnoe3       = mpptss.paneles[2]["noe"]      # 0.0
+            self.mundv3      = mpptss.paneles[2]["undv"]     # 0.0
+            self.mt3         = mpptss.paneles[2]["t"]         # 0.0
             #estructura extra
             self.mt1        = mpptss.t1        # 0.0
             self.mt2        = mpptss.t2        # 0.0
             self.mcorriente = mpptss.corriente # 0.0
-            save(([str(self.mVin),str(self.mIin),str(self.mVout),str(self.mbulr),str(self.mout),str(self.mnoe),str(self.mundv),str(self.mt),str(self.mt1),str(self.mt2),str(self.mcorriente)]),"Mppt"+str(self.Mppti )+".csv")
+            save(([str(1),str(self.mVin1),str(self.mIin1),str(self.mVout1),str(self.mbulr1),str(self.mout1),str(self.mnoe1),str(self.mundv1),str(self.mt1),str(self.mt1),str(self.mt2),str(self.mcorriente)]),"Mppt"+str(self.Mppti )+".csv")
+            save(([str(2),str(self.mVin2),str(self.mIin2),str(self.mVout2),str(self.mbulr2),str(self.mout2),str(self.mnoe2),str(self.mundv2),str(self.mt2),str(self.mt1),str(self.mt2),str(self.mcorriente)]),"Mppt"+str(self.Mppti )+".csv")
+            save(([str(3),str(self.mVin3),str(self.mIin3),str(self.mVout3),str(self.mbulr3),str(self.mout3),str(self.mnoe3),str(self.mundv3),str(self.mt3),str(self.mt1),str(self.mt2),str(self.mcorriente)]),"Mppt"+str(self.Mppti )+".csv")
             self.mpptObserver.updated=False
 
         #Obteniedo variables del observer del GPS solo si hay algún cambio
@@ -299,8 +320,7 @@ class Telemetria_Auto_Escolta:
             self.galt        = gpss.alt        #0.0 #altitud:float
             self.gerr        = gpss.err        #0 #error[metros]:int
             self.glastUpdate = gpss.lastUpdate #datetime.fromtimestamp(0.0)#ultima vez actualizado:datetime
-            self.gheading    = gpss.heading    #0.0 #grados de inclinacion respecto de la direccion[grados]:float
-            save(([str(self.glat),str(self.glon),str(self.galt),str(self.gerr),str(self.glastUpdate),str(self.gheading)]),"GPS"+str(self.GPSi)+".csv")
+            save(([str(self.glat),str(self.glon),str(self.galt),str(self.gerr),str(self.glastUpdate)]),"GPS"+str(self.GPSi)+".csv")
             self.gpsObserver.updated=False
 
         #Obteniedo variables del observer de los Botones solo si hay algún cambio
@@ -344,16 +364,8 @@ class Telemetria_Auto_Escolta:
         self.fun.canvas.draw()
 
 
-        print("what?")
-        
-        #RADOMIZADOR INICIAL
-        that = random.randint(0, 100) 
-        that0 =random.randint(0, 100) 
-        that1 =random.randint(0, 100) 
-        that2 =random.randint(0, 100) 
-        that3 =random.randint(1, 8) 
-        
-        
+        print(random.randint(0, 1))
+                
         ################################################
         ##############INFORMACION GENERAL###############
         ################################################
@@ -531,19 +543,15 @@ class Telemetria_Auto_Escolta:
         ####################PANELES#####################
         ################################################
         
-        #
-        #    self.mVin       = mpptss.Vin       # 0.0
-        #    self.mIin       = mpptss.Iin       # 0.0
-        #    self.mVout      = mpptss.Vout      # 0.0
-        #    self.mbulr      = mpptss.bulr      # 0.0
-        #    self.mout       = mpptss.out       # 0.0
-        #    self.mnoe       = mpptss.noe       # 0.0
-        #    self.mundv      = mpptss.undv      # 0.0
-        #    self.mt         = mpptss.t         # 0.0
-        #    #estructura extra
-        #    self.mt1        = mpptss.t1        # 0.0
-        #    self.mt2        = mpptss.t2        # 0.0
-        #    self.mcorriente = mpptss.corriente # 0.0
+
+        #    self.mVin1       = mpptss.paneles[0]["Vin"]       # 0.0
+        #    self.mIin1       = mpptss.paneles[0]["Iin"]       # 0.0
+        #    self.mVout1      = mpptss.paneles[0]["Vout"]      # 0.0
+        #    self.mbulr1      = mpptss.paneles[0]["bulr"]      # 0.0
+        #    self.mout1       = mpptss.paneles[0]["out"]       # 0.0
+        #    self.mnoe1       = mpptss.paneles[0]["noe"]       # 0.0
+        #    self.mundv1      = mpptss.paneles[0]["undv"]      # 0.0
+        #    self.mt1         = mpptss.paneles[0]["t"]         # 0.0
 
         self.background_label0.config(text=time.asctime())
         ind += 1
@@ -553,29 +561,49 @@ class Telemetria_Auto_Escolta:
         frame2 = self.frames[(ind+2)%4]
         frame3 = self.frames[(ind+1)%4]
         
-        self.background_label0.configure(image=frame)
-        self.background_label1.configure(image=frame2)
-        self.background_label.configure(image=frame3)
-        
+        if (self.mVin1==0.0):
+            self.background_label.configure(image=frame3)
+            setter(self.ErrorPanel1,str('Desconectado'))
+        else:
+            setter(self.ErrorPanel1,str('No hay errores'))
+
+        if (self.mVin2==0.0):
+            self.background_label0.configure(image=frame2)
+            setter(self.ErrorPanel2,str('Desconectado'))
+        else:
+            setter(self.ErrorPanel2,str('No hay errores'))
+
+
+
+        if (self.mVin3==0.0):
+            self.background_label1.configure(image=frame)
+            setter(self.ErrorPanel3,str('Desconectado'))
+        else:
+            setter(self.ErrorPanel3,str('No hay errores'))
+      
+        print(self.mVin1)
+        print(self.mVin2)
+        print(self.mVin3)
+
         #Bateria1
-        setter(self.VoltajeBateria1,str(that))
-        setter(self.CorrienteBateria1,str(that0))
-        setter(self.PotenciaBateria1,str(that1))
+        setter(self.VoltajeBateria1,'%.2f'%(self.mVin1))
+        setter(self.CorrienteBateria1,'%.2f'%(self.mIin1))
+        setter(self.PotenciaBateria1,'%.2f'%(self.mIin1*self.mVin1))
         #Bateria2
-        setter(self.VoltajeBateria2,str(that2))
-        setter(self.CorrienteBateria2,str(that3))
-        setter(self.PotenciaBateria2,str(that0))
+        setter(self.VoltajeBateria2,'%.2f'%(self.mVin2))
+        setter(self.CorrienteBateria2,'%.2f'%(self.mIin2))
+        setter(self.PotenciaBateria2,'%.2f'%(self.mIin2*self.mVin2))
         #Bateria3
-        setter(self.VoltajeBateria3,str(that3))
-        setter(self.CorrienteBateria3,str(that0))
-        setter(self.PotenciaBateria3,str(that1))
+        setter(self.VoltajeBateria3,'%.2f'%(self.mVin3))
+        setter(self.CorrienteBateria3,'%.2f'%(self.mIin3))
+        setter(self.PotenciaBateria3,'%.2f'%(self.mIin2*self.mVin2))
         
         #PotenciaTotal
-        setter(self.PotenciaTotal,str(that*100))
+        setter(self.PotenciaTotal,'%.2f'%((self.mIin1*self.mVin1)+(self.mIin2*self.mVin2)+(self.mIin2*self.mVin2)))
         #ErroresBaterias
-        setter(self.ErrorPanel1,str('No hay errores'))
-        setter(self.ErrorPanel2,str('No hay errores'))
-        setter(self.ErrorPanel3,str('No hay errores'))
+        #setter(self.ErrorPanel1,str('No hay errores'))
+        #setter(self.ErrorPanel2,str('No hay errores'))
+        #setter(self.ErrorPanel3,str('No hay errores'))
 
 
         ################################################
@@ -2068,14 +2096,33 @@ class Telemetria_Auto_Escolta:
 
 
         ##Inicializando variables del Mppt observadas
-        self.mVin       = 0.0
-        self.mIin       = 0.0
-        self.mVout      = 0.0
-        self.mbulr      = 0.0
-        self.mout       = 0.0
-        self.mnoe       = 0.0
-        self.mundv      = 0.0
-        self.mt         = 0.0
+
+        self.mVin1       = 0.0
+        self.mIin1       = 0.0
+        self.mVout1      = 0.0
+        self.mbulr1      = 0.0
+        self.mout1       = 0.0
+        self.mnoe1       = 0.0
+        self.mundv1      = 0.0
+        self.mt1         = 0.0
+
+        self.mVin2       = 0.0
+        self.mIin2       = 0.0
+        self.mVout2      = 0.0
+        self.mbulr2      = 0.0
+        self.mout2       = 0.0
+        self.mnoe2       = 0.0
+        self.mundv2      = 0.0
+        self.mt2         = 0.0
+
+        self.mVin3       = 0.0
+        self.mIin3       = 0.0
+        self.mVout3      = 0.0
+        self.mbulr3      = 0.0
+        self.mout3       = 0.0
+        self.mnoe3       = 0.0
+        self.mundv3      = 0.0
+        self.mt3         = 0.0
         #estructura extra
         self.mt1        = 0.0
         self.mt2        = 0.0
