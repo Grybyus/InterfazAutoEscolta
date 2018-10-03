@@ -15,7 +15,7 @@ class gpsObservable(object):
 		self.lon        = 0.0 #longitud:float
 		self.alt        = 0.0 #altitud:float
 		self.err        = 0 #error[metros]:int
-		self.lastUpdate = datetime.fromtimestamp(0.0)#ultima vez actualizado:datetime
+		self.lastUpdate = datetime.today()#ultima vez actualizado:datetime
 		#observadores
 		self.observers = []
 		self.receiver.addEventHandler(UDPTools.GPS_STRUCT,self,self.gpsUpdateHandler)

@@ -2136,7 +2136,7 @@ class Telemetria_Auto_Escolta:
         self.glon        = self.gps[0][1] #longitud:float
         self.galt        = 0.0 #altitud:float
         self.gerr        = 0 #error[metros]:int
-        self.glastUpdate = datetime.fromtimestamp(0.0)#ultima vez actualizado:datetime
+        self.glastUpdate = datetime.today()#ultima vez actualizado:datetime
         self.gheading    = 0.0 #grados de inclinacion respecto de la direccion[grados]:float
 
         ##Inicializando variables de botones observados
