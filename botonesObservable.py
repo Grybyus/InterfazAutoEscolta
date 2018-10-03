@@ -4,11 +4,11 @@ import traceback
 
 class botonesObservable(object):
 	"""docstring for botonesObservable"""
-	def __init__(self):
-		self.receiver=SensorReceiver()
+	def __init__(self,rec):
+		self.receiver = rec
 		self.updated=False
-		if not self.receiver.running:
-			self.receiver.open()
+		#if not self.receiver.running:
+		#	self.receiver.open()
 		#estructura principal
 		self.mppt      = False#int 32 //flag
 		self.pan1      = False
@@ -23,15 +23,17 @@ class botonesObservable(object):
 		self.receiver.addEventHandler(UDPTools.BOTONES_STRUCT,self,self.btnesUpdateHandler)
 
 	def btnesUpdateHandler(self,obj,datos):
-		self.mppt      = datos[1]&(1<<0)!=0#int 32 //flag
-		self.pan1      = datos[1]&(1<<1)!=0
-		self.pan2      = datos[1]&(1<<2)!=0
-		self.pan3      = datos[1]&(1<<3)!=0
-		self.lucesAl   = datos[2]&(1<<0)!=0# int 32 //flag
-		self.lucesBa   = datos[2]&(1<<1)!=0
-		self.lucesEm   = datos[2]&(1<<2)!=0
-		self.fan       = datos[3]#int 32 //[0-255]
-		self.bateria   = datos[4]!=0# int 32 //flag
+
+
+		self.mppt      = datos.get('mppt',0)&(1<<0)!=0#int 32 //flag
+		self.pan1      = datos.get('mppt',0)&(1<<1)!=0
+		self.pan2      = datos.get('mppt',0)&(1<<2)!=0
+		self.pan3      = datos.get('mppt',0)&(1<<3)!=0
+		self.lucesAl   = datos.get('luces',0)&(1<<0)!=0# int 32 //flag
+		self.lucesBa   = datos.get('luces',0)&(1<<1)!=0
+		self.lucesEm   = datos.get('luces',0)&(1<<2)!=0
+		self.fan       = datos.get('fan',0)#int 32 //[0-255]
+		self.bateria   = datos.get('bateria',0)!=0# int 32 //flag
 		self.updated   = True
 		self.notifyAll()
 

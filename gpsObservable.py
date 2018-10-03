@@ -5,11 +5,11 @@ import re
 
 class gpsObservable(object):
 	"""docstring for gpsObservable"""
-	def __init__(self):
-		self.receiver=SensorReceiver()
+	def __init__(self,rec):
+		self.receiver = rec
 		self.updated=False
-		if not self.receiver.running:
-			self.receiver.open()
+		#if not self.receiver.running:
+		#	self.receiver.open()
 		#estructura gps
 		self.lat        = 0.0 #latitud:float
 		self.lon        = 0.0 #longitud:float
@@ -21,11 +21,11 @@ class gpsObservable(object):
 		self.receiver.addEventHandler(UDPTools.GPS_STRUCT,self,self.gpsUpdateHandler)
 
 	def gpsUpdateHandler(self,obj,datos):
-		self.lat         = datos[1]
-		self.lon         = datos[2]
-		self.alt         = datos[3]
-		self.err         = datos[4]
-		self.lastUpdate  = datetime.fromtimestamp(datos[5])
+		self.lat         = datos.get('lat',0.0)
+		self.lon         = datos.get('lon',0.0)
+		self.alt         = datos.get('alt',0.0)
+		self.err         = datos.get('err',0)
+		self.lastUpdate  = datetime.fromtimestamp(datos.get('lastUpdate',1538544876))
 		self.updated     = True
 		self.notifyAll()
 

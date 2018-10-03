@@ -17,6 +17,7 @@ import random
 import time
 import matplotlib
 import os.path
+import time
 from BateriasObserver import *
 from ControladorObserver import *
 from MotorObserver import *
@@ -215,8 +216,9 @@ class Telemetria_Auto_Escolta:
             self.mTDSP= motor.t_DSP
             self.mOdo= motor.odometro
             self.mAH= motor.ah
-
-            save(([str(self.motorActivo),str(self.mcurrent) ,str(self.mvoltage),
+            
+            if False:
+                save(([str(self.motorActivo),str(self.mcurrent) ,str(self.mvoltage),
             str(self.mvelocidad) ,str(self.mRPM) ,str(self.mphaseC) ,str(self.mphaseB) ,
             str(self.mvoltage_1),str(self.mvoltage_2),str(self.mvoltage_3),
             str(self.mvoltage_4),str(self.mTmotor),str(self.mTDSP),str(self.mOdo),
@@ -244,7 +246,8 @@ class Telemetria_Auto_Escolta:
             self.bmaxVolt = bateria.maxVolt #{ 'mV': 0.0, 'CMUNumber':0,'CellNumber':0}
             self.bminTemp = bateria.minTemp #{ 'mT': 0.0, 'CMUNumber':0}
             self.bmaxTemp = bateria.maxTemp #{ 'mT': 0.0, 'CMUNumber':0}
-            save(([str(self.bCB1),str(self.bCB2),str(self.bCB3),str(self.bCB4),str(self.bCB5),
+            if False:
+                save(([str(self.bCB1),str(self.bCB2),str(self.bCB3),str(self.bCB4),str(self.bCB5),
                 str(self.bCB6),str(self.bSOCah),str(self.bSOCp),str(self.bminVolt),
                 str(self.bmaxVolt),str(self.bminTemp),str(self.bmaxTemp)]),"Baterias"+str(self.Bateriasi)+".csv")
 
@@ -266,7 +269,8 @@ class Telemetria_Auto_Escolta:
             self.cspCurrent = driver.spCurrent#0.0
             self.cspBusCurrent = driver.spBusCurrent# 0.0
             self.cspVelocity = driver.spVelocity#0.0 
-            save(([str(self.creverse),str(self.cneutral),str(self.cregen),str(self.cdrive),
+            if False:
+                save(([str(self.creverse),str(self.cneutral),str(self.cregen),str(self.cdrive),
                 str(self.caccesories),str(self.crun),str(self.cstart),str(self.cbrakes),
                 str(self.cfueldoor),str(self.cspCurrent),str(self.cspBusCurrent),
                 str(self.cspVelocity)]),"Controlador"+str(self.Controladori)+".csv")
@@ -306,9 +310,12 @@ class Telemetria_Auto_Escolta:
             self.mt1        = mpptss.t1        # 0.0
             self.mt2        = mpptss.t2        # 0.0
             self.mcorriente = mpptss.corriente # 0.0
-            save(([str(1),str(self.mVin1),str(self.mIin1),str(self.mVout1),str(self.mbulr1),str(self.mout1),str(self.mnoe1),str(self.mundv1),str(self.mt1),str(self.mt1),str(self.mt2),str(self.mcorriente)]),"Mppt"+str(self.Mppti )+".csv")
-            save(([str(2),str(self.mVin2),str(self.mIin2),str(self.mVout2),str(self.mbulr2),str(self.mout2),str(self.mnoe2),str(self.mundv2),str(self.mt2),str(self.mt1),str(self.mt2),str(self.mcorriente)]),"Mppt"+str(self.Mppti )+".csv")
-            save(([str(3),str(self.mVin3),str(self.mIin3),str(self.mVout3),str(self.mbulr3),str(self.mout3),str(self.mnoe3),str(self.mundv3),str(self.mt3),str(self.mt1),str(self.mt2),str(self.mcorriente)]),"Mppt"+str(self.Mppti )+".csv")
+            if False:
+                save(([str(1),str(self.mVin1),str(self.mIin1),str(self.mVout1),str(self.mbulr1),str(self.mout1),str(self.mnoe1),str(self.mundv1),str(self.mt1),str(self.mt1),str(self.mt2),str(self.mcorriente)]),"Mppt"+str(self.Mppti )+".csv")
+            if False:
+                save(([str(2),str(self.mVin2),str(self.mIin2),str(self.mVout2),str(self.mbulr2),str(self.mout2),str(self.mnoe2),str(self.mundv2),str(self.mt2),str(self.mt1),str(self.mt2),str(self.mcorriente)]),"Mppt"+str(self.Mppti )+".csv")
+            if False:
+                save(([str(3),str(self.mVin3),str(self.mIin3),str(self.mVout3),str(self.mbulr3),str(self.mout3),str(self.mnoe3),str(self.mundv3),str(self.mt3),str(self.mt1),str(self.mt2),str(self.mcorriente)]),"Mppt"+str(self.Mppti )+".csv")
             self.mpptObserver.updated=False
 
         #Obteniedo variables del observer del GPS solo si hay algún cambio
@@ -320,7 +327,8 @@ class Telemetria_Auto_Escolta:
             self.galt        = gpss.alt        #0.0 #altitud:float
             self.gerr        = gpss.err        #0 #error[metros]:int
             self.glastUpdate = gpss.lastUpdate #datetime.fromtimestamp(0.0)#ultima vez actualizado:datetime
-            save(([str(self.glat),str(self.glon),str(self.galt),str(self.gerr),str(self.glastUpdate)]),"GPS"+str(self.GPSi)+".csv")
+            if False:
+                save(([str(self.glat),str(self.glon),str(self.galt),str(self.gerr),str(self.glastUpdate)]),"GPS"+str(self.GPSi)+".csv")
             self.gpsObserver.updated=False
 
         #Obteniedo variables del observer de los Botones solo si hay algún cambio
@@ -336,7 +344,8 @@ class Telemetria_Auto_Escolta:
             self.blucesEm   = botones.lucesEm   # False
             self.bfan       = botones.fan       # 0#int 32 //[0-255]
             self.bbateria   = botones.bateria   # False# int 32 //flag
-            save(([str(self.bmppt),str(self.bpan1),str(self.bpan2),str(self.bpan3),str(self.blucesAl),str(self.blucesBa),str(self.blucesEm),str(self.bfan),str(self.bbateria)]),"botones"+str(self.botonesi)+".csv")
+            if False:
+                save(([str(self.bmppt),str(self.bpan1),str(self.bpan2),str(self.bpan3),str(self.blucesAl),str(self.blucesBa),str(self.blucesEm),str(self.bfan),str(self.bbateria)]),"botones"+str(self.botonesi)+".csv")
             self.botObserver.updated=False
 
         ################################################
@@ -364,7 +373,7 @@ class Telemetria_Auto_Escolta:
         self.fun.canvas.draw()
 
 
-        print(random.randint(0, 1))
+        #print(random.randint(0, 1))
                 
         ################################################
         ##############INFORMACION GENERAL###############
@@ -584,9 +593,9 @@ class Telemetria_Auto_Escolta:
             self.background_label1.configure(image=self.frames[0])
             setter(self.ErrorPanel3,str('No hay errores'))
       
-        print(self.mVin1)
-        print(self.mVin2)
-        print(self.mVin3)
+        #print(self.mVin1)
+        #print(self.mVin2)
+        #print(self.mVin3)
 
         #Bateria1
         setter(self.VoltajeBateria1,'%.2f'%(self.mVin1))
@@ -1943,8 +1952,11 @@ class Telemetria_Auto_Escolta:
         set(self.LabelframeBateria, 0, 11, "Cell 7 mV")
 
         #Paneles
-        path = r"Panel.png"
-        filename = PhotoImage(file= path)
+        path = r"Panel.jpg"
+        try:
+            filename = PhotoImage(file= path)
+        except:
+            filename = PhotoImage(path)
         self.background_label = Label(self.Frame1, image=filename)
         self.background_label.image = filename
         self.background_label.place(relx=0, rely=0, relwidth=1, relheight=1)
@@ -2043,9 +2055,12 @@ class Telemetria_Auto_Escolta:
         self.drvObserver = ControladorObserver()
         self.motObserver = MotorObserver()
 
-        self.mpptObserver = mpptObservable()
-        self.gpsObserver = gpsObservable()
-        self.botObserver = botonesObservable()
+        sr = SensorReceiver.getinstance()
+
+        self.mpptObserver = mpptObservable(sr)
+        self.gpsObserver = gpsObservable(sr)
+        self.botObserver = botonesObservable(sr)
+        sr.open()
 
         self.drvObserver.connect()#inicia la comunicación con el cambus
 
@@ -2153,7 +2168,7 @@ class Telemetria_Auto_Escolta:
         #####################################################
         #######Crear Archivos de Guardado de Datos ##########
         #####################################################
-        
+        '''
         auxenter = True
         self.motori = 0
         while(auxenter):
@@ -2202,7 +2217,7 @@ class Telemetria_Auto_Escolta:
                 auxenter = False
             else:
                 self.botonesi = self.botonesi+1
-
+        '''
         self.clock()
 
 if __name__ == '__main__':

@@ -5,30 +5,42 @@ from .udptools import UDPTools
 import traceback
 
 
+
 def singleton(class_):
   instances = {}
   def getinstance(*args, **kwargs):
-    if class_ not in instances:
-        instances[class_] = class_(*args, **kwargs)
-    return instances[class_]
+    if 'instances' not in globals():
+        globals()['instances'] = {}
+    if class_ not in globals()['instances']:
+        globals()['instances'][class_] = class_(*args, **kwargs)
+    return globals()['instances'][class_]
   return getinstance
 
-@singleton
+#@singleton
 class SensorReceiver(object):
 	"""docstring for SensorReceiver"""
+	receivers = {}
+
+	@classmethod
+	def getinstance(cls):
+		return globals().get('SingletonReceiver',cls())
+
 	def __init__(self):
 		self.eventHandlers = {}
 		self.running = False
 		self.Escuchando = False
+
 	def thread_lisent(self,tname,delay=0):
 		self.Escuchando = True
 		self.running=True
 		while self.Escuchando:
 			if(delay>0):
 				time.sleep(delay)
+
 			dato = UDPTools.Receive()
-			if(str(dato[0]) in self.eventHandlers):
-				for h,o in self.eventHandlers[str(dato[0])]:
+
+			if(str(dato.get("ctx",0)) in self.eventHandlers):
+				for h,o in self.eventHandlers[str(dato.get("ctx",0))]:
 					try:
 						h(o,dato)
 					except Exception as ez:
@@ -40,7 +52,7 @@ class SensorReceiver(object):
 	def open(self):
 		if(not self.running):
 			try:
-				self.thread = _thread.start_new_thread( self.thread_lisent, ("Thread-1", 0, ) )
+				self.thread = _thread.start_new_thread( self.thread_lisent, ("Thread-1", 1, ) )
 			except Exception as e:
 				print(e)
 				print ("Error: unable to start thread")

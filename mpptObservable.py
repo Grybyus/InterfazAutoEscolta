@@ -4,11 +4,11 @@ from comm.udptools import UDPTools
 class mpptObservable(object):
 	"""docstring for mpptObserver"""
 
-	def __init__(self):
-		self.receiver=SensorReceiver()
+	def __init__(self,rec):
+		self.receiver = rec
 		self.updated=False
-		if not self.receiver.running:
-			self.receiver.open()
+		#if not self.receiver.running:
+		#	self.receiver.open()
 		#estructura principal
 		self.paneles   =[{},{},{}]
 		for i in range(3):
@@ -31,22 +31,22 @@ class mpptObservable(object):
 		self.receiver.addEventHandler(UDPTools.EXTRAMPPT_STRUCT,self,self.extraUpdateHandler)
 
 	def mpptUpdateHandler(self,obj,datos):
-		panelID               = datos[1]
-		self.paneles[panelID-1]["Vin"] = datos[2]
-		self.paneles[panelID-1]["Iin"] = datos[3]
-		self.paneles[panelID-1]["Vout"] = datos[4]
-		self.paneles[panelID-1]["bulr"] = datos[5]
-		self.paneles[panelID-1]["out"] = datos[6]
-		self.paneles[panelID-1]["noe"] = datos[7]
-		self.paneles[panelID-1]["undv"] = datos[8]
-		self.paneles[panelID-1]["t"] = datos[9]
+		panelID                        = datos.get('idMPPT',0)
+		self.paneles[panelID-1]["Vin"] = datos.get('Vin',0.0)
+		self.paneles[panelID-1]["Iin"] = datos.get("Iin",0.0)
+		self.paneles[panelID-1]["Vout"] = datos.get("Vout",0.0)
+		self.paneles[panelID-1]["bulr"] = datos.get("bulr",0.0)
+		self.paneles[panelID-1]["out"] = datos.get("out",0.0)
+		self.paneles[panelID-1]["noe"] = datos.get("noe",0.0)
+		self.paneles[panelID-1]["undv"] = datos.get("undv",0.0)
+		self.paneles[panelID-1]["t"] = datos.get("t",0.0)
 		self.updated               = True
 		self.notifyAll()
 
 	def extraUpdateHandler(self,obj,datos):
-		self.t1        = datos[1]
-		self.t2        = datos[2]
-		self.corriente = datos[3]
+		self.t1        = datos.get('t1')
+		self.t2        = datos.get('t2')
+		self.corriente = datos.get('corriente')
 		self.updated   = True
 		self.notifyAll()
 
