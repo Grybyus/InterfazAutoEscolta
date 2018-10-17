@@ -44,9 +44,9 @@ class mpptObservable(object):
 		self.notifyAll()
 
 	def extraUpdateHandler(self,obj,datos):
-		self.t1        = datos.get('t1')
-		self.t2        = datos.get('t2')
-		self.corriente = datos.get('corriente')
+		self.t1        = datos.get('t1',0.0)
+		self.t2        = datos.get('t2',0.0)
+		self.corriente = datos.get('corriente',0.0)
 		self.updated   = True
 		self.notifyAll()
 

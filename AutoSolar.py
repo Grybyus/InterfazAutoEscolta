@@ -327,8 +327,7 @@ class Telemetria_Auto_Escolta:
             self.galt        = gpss.alt        #0.0 #altitud:float
             self.gerr        = gpss.err        #0 #error[metros]:int
             self.glastUpdate = gpss.lastUpdate #datetime.fromtimestamp(0.0)#ultima vez actualizado:datetime
-            if False:
-                save(([str(self.glat),str(self.glon),str(self.galt),str(self.gerr),str(self.glastUpdate)]),"GPS"+str(self.GPSi)+".csv")
+            save(([str(self.glat),str(self.glon),str(self.galt),str(self.gerr),str(self.glastUpdate)]),"GPS"+str(self.GPSi)+".csv")
             self.gpsObserver.updated=False
 
         #Obteniedo variables del observer de los Botones solo si hay algún cambio
@@ -344,8 +343,7 @@ class Telemetria_Auto_Escolta:
             self.blucesEm   = botones.lucesEm   # False
             self.bfan       = botones.fan       # 0#int 32 //[0-255]
             self.bbateria   = botones.bateria   # False# int 32 //flag
-            if False:
-                save(([str(self.bmppt),str(self.bpan1),str(self.bpan2),str(self.bpan3),str(self.blucesAl),str(self.blucesBa),str(self.blucesEm),str(self.bfan),str(self.bbateria)]),"botones"+str(self.botonesi)+".csv")
+            save(([str(self.bmppt),str(self.bpan1),str(self.bpan2),str(self.bpan3),str(self.blucesAl),str(self.blucesBa),str(self.blucesEm),str(self.bfan),str(self.bbateria)]),"botones"+str(self.botonesi)+".csv")
             self.botObserver.updated=False
 
         ################################################
@@ -2168,7 +2166,7 @@ class Telemetria_Auto_Escolta:
         #####################################################
         #######Crear Archivos de Guardado de Datos ##########
         #####################################################
-        '''
+        
         auxenter = True
         self.motori = 0
         while(auxenter):
@@ -2217,7 +2215,7 @@ class Telemetria_Auto_Escolta:
                 auxenter = False
             else:
                 self.botonesi = self.botonesi+1
-        '''
+        
         self.clock()
 
 if __name__ == '__main__':
